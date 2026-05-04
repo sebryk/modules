@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                 String           @id @default(uuid()) @db.Uuid
+  email              String           @unique @db.VarChar(255)
+  firstName          String           @map("first_name") @db.VarChar(255)
+  lastName           String           @map("last_name") @db.VarChar(255)
+  position           String           @db.VarChar(255)
+  passwordHash       String           @map("password_hash") @db.VarChar(255)
+  createdAt          DateTime         @default(now()) @map("created_at")
+  applications       Application[]    @relation("UserApplications")
+  roleAssignments    RoleAssignment[] @relation("UserRoleAssignments")
+  grantedAssignments RoleAssignment[] @relation("GrantedByUser")
+
+  @@map("users")
+}
+
+enum ApplicationStatus {
+  NEW
+  IN_PROGRESS
+  DONE
+  CANCELLED
+}
+
+model Application {
+  id            String            @id @default(uuid()) @db.Uuid
+  title         String            @db.VarChar(255)
+  description   String            @db.Text
+  status        ApplicationStatus @default(NEW)
+  createdBy     String            @map("created_by") @db.Uuid
+  createdAt     DateTime          @default(now()) @map("created_at")
+  updatedAt     DateTime          @updatedAt @map("updated_at")
+  createdByUser User              @relation("UserApplications", fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@index([createdBy])
+  @@map("applications")
+}
+
+model Role {
+  id              String           @id @default(uuid()) @db.Uuid
+  name            String           @unique @db.VarChar(255)
+  description     String?          @db.VarChar(255)
+  isSystem        Boolean          @default(false) @map("is_system")
+  roleAssignments RoleAssignment[]
+  rolePermissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id              String           @id @default(uuid()) @db.Uuid
+  resource        String           @db.VarChar(255)
+  action          String           @db.VarChar(255)
+  rolePermissions RolePermission[]
+
+  @@unique([resource, action])
+  @@map("permissions")
+}
+
+model RoleAssignment {
+  userId        String   @map("user_id") @db.Uuid
+  roleId        String   @map("role_id") @db.Uuid
+  grantedBy     String?  @map("granted_by") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at")
+  user          User     @relation("UserRoleAssignments", fields: [userId], references: [id], onDelete: Cascade)
+  role          Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  grantedByUser User?    @relation("GrantedByUser", fields: [grantedBy], references: [id], onDelete: SetNull)
+
+  @@id([userId, roleId])
+  @@map("role_assignments")
+}
+
+model RolePermission {
+  roleId       String     @map("role_id") @db.Uuid
+  permissionId String     @map("permission_id") @db.Uuid
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
