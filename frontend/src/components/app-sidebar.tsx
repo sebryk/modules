@@ -33,7 +33,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 
-const data = {
+export const data = {
    user: {
       name: "shadcn",
       email: "m@example.com",
@@ -47,7 +47,7 @@ const data = {
       },
       {
          title: "Заявки",
-         url: "/application",
+         url: "/applications",
          icon: <FolderIcon />,
       },
       // {
@@ -152,7 +152,7 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
    return (
-      <Sidebar collapsible="offcanvas" {...props}>
+      <Sidebar collapsible="icon" {...props}>
          <SidebarHeader>
             <SidebarMenu>
                <SidebarMenuItem>
