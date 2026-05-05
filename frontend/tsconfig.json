@@ -1,5 +1,6 @@
 {
    "compilerOptions": {
+      "forceConsistentCasingInFileNames": true,
       "target": "ES2017",
       "lib": ["dom", "dom.iterable", "esnext"],
       "allowJs": true,
@@ -24,6 +25,7 @@
    },
    "include": [
       "next-env.d.ts",
+      "**/*.d.ts",
       "**/*.ts",
       "**/*.tsx",
       ".next/types/**/*.ts",

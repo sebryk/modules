@@ -1,10 +1,12 @@
-import { Geist, Geist_Mono, Inter } from "next/font/google"
+import { Geist_Mono, Inter } from "next/font/google"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@/lib/utils"
+import { AppSidebar } from "@/components/app-sidebar"
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 
-const inter = Inter({subsets:['latin'],variable:'--font-sans'})
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
 
 const fontMono = Geist_Mono({
    subsets: ["latin"],
@@ -28,7 +30,19 @@ export default function RootLayout({
          )}
       >
          <body>
-            <ThemeProvider>{children}</ThemeProvider>
+            <ThemeProvider>
+               <SidebarProvider
+                  style={
+                     {
+                        "--sidebar-width": "calc(var(--spacing) * 72)",
+                        "--header-height": "calc(var(--spacing) * 12)",
+                     } as React.CSSProperties
+                  }
+               >
+                  <AppSidebar variant="inset" />
+                  <SidebarInset>{children}</SidebarInset>
+               </SidebarProvider>
+            </ThemeProvider>
          </body>
       </html>
    )

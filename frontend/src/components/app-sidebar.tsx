@@ -29,8 +29,9 @@ import {
    DatabaseIcon,
    FileChartColumnIcon,
    FileIcon,
-   CommandIcon,
+   Apple,
 } from "lucide-react"
+import Link from "next/link"
 
 const data = {
    user: {
@@ -40,30 +41,30 @@ const data = {
    },
    navMain: [
       {
-         title: "Dashboard",
-         url: "#",
-         icon: <LayoutDashboardIcon />,
-      },
-      {
-         title: "Lifecycle",
-         url: "#",
-         icon: <ListIcon />,
-      },
-      {
-         title: "Analytics",
-         url: "#",
-         icon: <ChartBarIcon />,
-      },
-      {
-         title: "Projects",
-         url: "#",
-         icon: <FolderIcon />,
-      },
-      {
-         title: "Team",
-         url: "#",
+         title: "Команда",
+         url: "/team",
          icon: <UsersIcon />,
       },
+      {
+         title: "Заявки",
+         url: "/application",
+         icon: <FolderIcon />,
+      },
+      // {
+      //    title: "Lifecycle",
+      //    url: "#",
+      //    icon: <ListIcon />,
+      // },
+      // {
+      //    title: "Analytics",
+      //    url: "#",
+      //    icon: <ChartBarIcon />,
+      // },
+      // {
+      //    title: "Projects",
+      //    url: "#",
+      //    icon: <FolderIcon />,
+      // },
    ],
    navClouds: [
       {
@@ -159,20 +160,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                      asChild
                      className="data-[slot=sidebar-menu-button]:p-1.5!"
                   >
-                     <a href="#">
-                        <CommandIcon className="size-5!" />
+                     <Link href="/">
+                        <Apple className="size-5!" />
                         <span className="text-base font-semibold">
-                           Acme Inc.
+                           Компания
                         </span>
-                     </a>
+                     </Link>
                   </SidebarMenuButton>
                </SidebarMenuItem>
             </SidebarMenu>
          </SidebarHeader>
          <SidebarContent>
             <NavMain items={data.navMain} />
-            <NavDocuments items={data.documents} />
-            <NavSecondary items={data.navSecondary} className="mt-auto" />
+            {/* <NavDocuments items={data.documents} />
+            <NavSecondary items={data.navSecondary} className="mt-auto" /> */}
          </SidebarContent>
          <SidebarFooter>
             <NavUser user={data.user} />
