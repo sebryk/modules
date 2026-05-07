@@ -1,5 +1,3 @@
-"use client"
-
 import * as React from "react"
 import {
    closestCenter,
@@ -112,31 +110,31 @@ export const schema = z.object({
    reviewer: z.string(),
 })
 
-// Create a separate component for the drag handle
-function DragHandle({ id }: { id: number }) {
-   const { attributes, listeners } = useSortable({
-      id,
-   })
+// // Create a separate component for the drag handle
+// function DragHandle({ id }: { id: number }) {
+//    const { attributes, listeners } = useSortable({
+//       id,
+//    })
 
-   return (
-      <Button
-         {...attributes}
-         {...listeners}
-         variant="ghost"
-         size="icon"
-         className="size-7 text-muted-foreground hover:bg-transparent"
-      >
-         <GripVerticalIcon className="size-3 text-muted-foreground" />
-         <span className="sr-only">Drag to reorder</span>
-      </Button>
-   )
-}
+//    return (
+//       <Button
+//          {...attributes}
+//          {...listeners}
+//          variant="ghost"
+//          size="icon"
+//          className="size-7 text-muted-foreground hover:bg-transparent"
+//       >
+//          <GripVerticalIcon className="size-3 text-muted-foreground" />
+//          <span className="sr-only">Drag to reorder</span>
+//       </Button>
+//    )
+// }
 
 const columns: ColumnDef<z.infer<typeof schema>>[] = [
    {
       id: "drag",
       header: () => null,
-      cell: ({ row }) => <DragHandle id={row.original.id} />,
+      // cell: ({ row }) => <DragHandle id={row.original.id} />,
    },
    {
       id: "select",

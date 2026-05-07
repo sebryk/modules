@@ -20,10 +20,9 @@ import { Skeleton } from "@/components/ui/skeleton"
 import {
    Tooltip,
    TooltipContent,
-   TooltipProvider,
    TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { SidebarIcon } from "@phosphor-icons/react"
+import { PanelLeftIcon } from "lucide-react"
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
@@ -130,25 +129,23 @@ function SidebarProvider({
 
    return (
       <SidebarContext.Provider value={contextValue}>
-         <TooltipProvider delayDuration={0}>
-            <div
-               data-slot="sidebar-wrapper"
-               style={
-                  {
-                     "--sidebar-width": SIDEBAR_WIDTH,
-                     "--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
-                     ...style,
-                  } as React.CSSProperties
-               }
-               className={cn(
-                  "group/sidebar-wrapper flex min-h-svh w-full has-data-[variant=inset]:bg-sidebar",
-                  className
-               )}
-               {...props}
-            >
-               {children}
-            </div>
-         </TooltipProvider>
+         <div
+            data-slot="sidebar-wrapper"
+            style={
+               {
+                  "--sidebar-width": SIDEBAR_WIDTH,
+                  "--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
+                  ...style,
+               } as React.CSSProperties
+            }
+            className={cn(
+               "group/sidebar-wrapper flex min-h-svh w-full has-data-[variant=inset]:bg-sidebar",
+               className
+            )}
+            {...props}
+         >
+            {children}
+         </div>
       </SidebarContext.Provider>
    )
 }
@@ -277,7 +274,7 @@ function SidebarTrigger({
          }}
          {...props}
       >
-         <SidebarIcon />
+         <PanelLeftIcon />
          <span className="sr-only">Toggle Sidebar</span>
       </Button>
    )

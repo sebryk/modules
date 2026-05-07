@@ -1,11 +1,10 @@
-"use client"
-
 import * as React from "react"
 
 import { NavDocuments } from "@/components/nav-documents"
 import { NavMain } from "@/components/nav-main"
 import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
+import { Link } from "react-router"
 import {
    Sidebar,
    SidebarContent,
@@ -29,11 +28,11 @@ import {
    DatabaseIcon,
    FileChartColumnIcon,
    FileIcon,
+   CommandIcon,
    Apple,
 } from "lucide-react"
-import Link from "next/link"
 
-export const data = {
+const data = {
    user: {
       name: "shadcn",
       email: "m@example.com",
@@ -41,15 +40,20 @@ export const data = {
    },
    navMain: [
       {
-         title: "Команда",
-         url: "/team",
-         icon: <UsersIcon />,
-      },
-      {
          title: "Заявки",
-         url: "/applications",
+         url: "#",
          icon: <FolderIcon />,
       },
+      {
+         title: "Команда",
+         url: "#",
+         icon: <UsersIcon />,
+      },
+      // {
+      //    title: "Dashboard",
+      //    url: "#",
+      //    icon: <LayoutDashboardIcon />,
+      // },
       // {
       //    title: "Lifecycle",
       //    url: "#",
@@ -59,11 +63,6 @@ export const data = {
       //    title: "Analytics",
       //    url: "#",
       //    icon: <ChartBarIcon />,
-      // },
-      // {
-      //    title: "Projects",
-      //    url: "#",
-      //    icon: <FolderIcon />,
       // },
    ],
    navClouds: [
@@ -160,7 +159,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                      asChild
                      className="data-[slot=sidebar-menu-button]:p-1.5!"
                   >
-                     <Link href="/">
+                     <Link to="/">
                         <Apple className="size-5!" />
                         <span className="text-base font-semibold">
                            Компания
