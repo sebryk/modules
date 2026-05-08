@@ -1,0 +1,17 @@
+{
+   "form": {
+      "title": "Вход в аккаунт",
+      "subtitle": "Введите логин и пароль для входа в систему.",
+      "inputs": {
+         "login": {
+            "label": "Логин",
+            "placeholder": "example@example.ru"
+         },
+         "password": {
+            "label": "Пароль",
+            "placeholder": "••••••••"
+         }
+      },
+      "submitButton": "Войти"
+   }
+}

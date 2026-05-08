@@ -1,11 +1,10 @@
+import { clearSession } from "@/entities/session"
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar"
 import {
    DropdownMenu,
    DropdownMenuContent,
-   DropdownMenuGroup,
    DropdownMenuItem,
    DropdownMenuLabel,
-   DropdownMenuSeparator,
    DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu"
 import {
@@ -14,13 +13,12 @@ import {
    SidebarMenuItem,
    useSidebar,
 } from "@/shared/ui/sidebar"
+import { ROUTES } from "@/shared/config/routes"
 import {
    EllipsisVerticalIcon,
-   CircleUserRoundIcon,
-   CreditCardIcon,
-   BellIcon,
    LogOutIcon,
 } from "lucide-react"
+import { useNavigate } from "react-router"
 
 export function NavUser({
    user,
@@ -32,6 +30,12 @@ export function NavUser({
    }
 }) {
    const { isMobile } = useSidebar()
+   const navigate = useNavigate()
+
+   const handleLogout = () => {
+      clearSession()
+      navigate(ROUTES.login, { replace: true })
+   }
 
    return (
       <SidebarMenu>
@@ -45,7 +49,7 @@ export function NavUser({
                      <Avatar className="h-8 w-8 rounded-lg grayscale">
                         <AvatarImage src={user.avatar} alt={user.name} />
                         <AvatarFallback className="rounded-lg">
-                           CN
+                           {user.name.slice(0, 2).toUpperCase()}
                         </AvatarFallback>
                      </Avatar>
                      <div className="grid flex-1 text-left text-sm leading-tight">
@@ -70,7 +74,7 @@ export function NavUser({
                         <Avatar className="h-8 w-8 rounded-lg">
                            <AvatarImage src={user.avatar} alt={user.name} />
                            <AvatarFallback className="rounded-lg">
-                              CN
+                              {user.name.slice(0, 2).toUpperCase()}
                            </AvatarFallback>
                         </Avatar>
                         <div className="grid flex-1 text-left text-sm leading-tight">
@@ -83,23 +87,7 @@ export function NavUser({
                         </div>
                      </div>
                   </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuGroup>
-                     <DropdownMenuItem>
-                        <CircleUserRoundIcon />
-                        Account
-                     </DropdownMenuItem>
-                     <DropdownMenuItem>
-                        <CreditCardIcon />
-                        Billing
-                     </DropdownMenuItem>
-                     <DropdownMenuItem>
-                        <BellIcon />
-                        Notifications
-                     </DropdownMenuItem>
-                  </DropdownMenuGroup>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout}>
                      <LogOutIcon />
                      Log out
                   </DropdownMenuItem>

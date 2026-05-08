@@ -2,6 +2,7 @@ import * as React from "react"
 import { Apple } from "lucide-react"
 import { Link } from "react-router"
 
+import { useSession } from "@/entities/session"
 import { appRoutes } from "@/shared/config/navigation"
 import { NavMain } from "@/shared/ui/nav-main"
 import { NavUser } from "@/shared/ui/nav-user"
@@ -15,15 +16,10 @@ import {
    SidebarMenuItem,
 } from "@/shared/ui/sidebar"
 
-const data = {
-   user: {
-      name: "shadcn",
-      email: "m@example.com",
-      avatar: "/avatars/shadcn.jpg",
-   },
-}
-
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+   const session = useSession()
+   const login = session?.login ?? "Guest"
+
    return (
       <Sidebar collapsible="icon" {...props}>
          <SidebarHeader>
@@ -47,7 +43,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <NavMain items={appRoutes} />
          </SidebarContent>
          <SidebarFooter>
-            <NavUser user={data.user} />
+            <NavUser
+               user={{
+                  name: login,
+                  email: login,
+                  avatar: "",
+               }}
+            />
          </SidebarFooter>
       </Sidebar>
    )
