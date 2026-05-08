@@ -1,3 +1,4 @@
+import type { ComponentProps } from "react"
 import { useState } from "react"
 import { useLocation, useNavigate } from "react-router"
 
@@ -14,7 +15,6 @@ import {
 } from "@/shared/ui/card"
 import {
    Field,
-   FieldDescription,
    FieldError,
    FieldGroup,
    FieldLabel,
@@ -33,21 +33,26 @@ type SignInFormProps = {
 }
 
 const SignInForm = ({ className }: SignInFormProps) => {
-   const { form: { title, subtitle, inputs, submitButton } } = data
+   const { form: { title, subtitle, inputs, button } } = data
    const navigate = useNavigate()
    const location = useLocation()
    const state = location.state as RedirectState | null
-   const [login, setLogin] = useState("")
-   const [password, setPassword] = useState("")
+   const [auth, setAuth] = useState({
+      login: "",
+      password: "",
+   })
+   const { login, password } = auth
    const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+   const handleSubmit: NonNullable<ComponentProps<"form">["onSubmit"]> = (
+      event
+   ) => {
       event.preventDefault()
 
       const normalizedLogin = login.trim()
 
       if (!normalizedLogin || !password) {
-         setErrorMessage("Enter login and password.")
+         setErrorMessage("Введите логин и пароль.")
          return
       }
 
@@ -72,39 +77,32 @@ const SignInForm = ({ className }: SignInFormProps) => {
             <CardContent>
                <form onSubmit={handleSubmit}>
                   <FieldGroup>
-                     <Field>
-                        <FieldLabel htmlFor="login">{inputs.login.label}</FieldLabel>
-                        <Input
-                           id="login"
-                           type="text"
-                           placeholder={inputs.login.placeholder}
-                           value={login}
-                           onChange={(event) => {
-                              setLogin(event.target.value)
-                              setErrorMessage(null)
-                           }}
-                           required
-                        />
-                     </Field>
-                     <Field>
-                        <FieldLabel htmlFor="password">{inputs.password.label}</FieldLabel>
-                        <Input
-                           id="password"
-                           type="password"
-                           placeholder={inputs.password.placeholder}
-                           value={password}
-                           onChange={(event) => {
-                              setPassword(event.target.value)
-                              setErrorMessage(null)
-                           }}
-                           required
-                        />
-                     </Field>
+                     {inputs.map((input) => (
+                        <Field key={input.name}>
+                           <FieldLabel htmlFor={input.name}>
+                              {input.label}
+                           </FieldLabel>
+                           <Input
+                              id={input.name}
+                              type={input.type}
+                              value={
+                                 auth[input.name as keyof typeof auth] || ""
+                              }
+                              onChange={(e) => {
+                                 const value = e.target.value
+                                 setAuth((prev) => ({
+                                    ...prev,
+                                    [input.name]: value,
+                                 }))
+                              }}
+                           />
+                        </Field>
+                     ))}
                      {errorMessage ? (
                         <FieldError>{errorMessage}</FieldError>
                      ) : null}
                      <Field>
-                        <Button type="submit">{submitButton}</Button>
+                        <Button type="submit">{button.title}</Button>
                      </Field>
                   </FieldGroup>
                </form>
