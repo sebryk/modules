@@ -19,11 +19,11 @@ const systemPermissions = [
 ] as const satisfies readonly string[];
 
 const seed = async (): Promise<void> => {
-   const adminEmail = process.env.SEED_ADMIN_EMAIL;
-   const adminPassword = process.env.SEED_ADMIN_PASSWORD;
+   const adminEmail = process.env.TEST_ADMIN_EMAIL;
+   const adminPassword = process.env.TEST_ADMIN_PASSWORD;
 
    if (!adminEmail || !adminPassword) {
-      throw new Error('SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD are required');
+      throw new Error('TEST_ADMIN_EMAIL and TEST_ADMIN_PASSWORD are required');
    }
 
    const adminRole = await prisma.role.upsert({
