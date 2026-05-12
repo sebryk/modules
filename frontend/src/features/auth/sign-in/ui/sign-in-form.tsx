@@ -37,11 +37,11 @@ const SignInForm = ({ className }: SignInFormProps) => {
    const navigate = useNavigate()
    const location = useLocation()
    const state = location.state as RedirectState | null
-   const [auth, setAuth] = useState({
+   const [userAuth, setUserAuth] = useState({
       login: "",
       password: "",
    })
-   const { login, password } = auth
+   const { login, password } = userAuth
    const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
    const handleSubmit: NonNullable<ComponentProps<"form">["onSubmit"]> = (
@@ -86,11 +86,11 @@ const SignInForm = ({ className }: SignInFormProps) => {
                               id={input.name}
                               type={input.type}
                               value={
-                                 auth[input.name as keyof typeof auth] || ""
+                                 userAuth[input.name as keyof typeof userAuth] || ""
                               }
                               onChange={(e) => {
                                  const value = e.target.value
-                                 setAuth((prev) => ({
+                                 setUserAuth((prev) => ({
                                     ...prev,
                                     [input.name]: value,
                                  }))
