@@ -1,7 +1,7 @@
 import { Route, Routes } from "react-router"
 
 import { ProtectedRoute } from "@/app/guards/protected-route"
-import { PublicOnlyRoute } from "@/app/guards/public-only-route"
+import { PublicRoute } from "@/app/guards/public-route"
 import { RootLayout } from "@/widgets/app-layout"
 import { ApplicationsPage } from "@/pages/applications"
 import { HomePage } from "@/pages/home"
@@ -15,9 +15,9 @@ const AppRouter = () => {
          <Route
             path={ROUTES.login}
             element={
-               <PublicOnlyRoute>
+               <PublicRoute>
                   <LoginPage />
-               </PublicOnlyRoute>
+               </PublicRoute>
             }
          />
          <Route

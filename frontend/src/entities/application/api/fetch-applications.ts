@@ -1,23 +1,22 @@
-import type { ApplicationsList } from "@/entities/application/model/types"
+import type { ApplicationsList } from '@/entities/application/model/types';
+import axios from 'axios';
 
-const DEFAULT_API_BASE_URL = "http://localhost:3000"
-
-const buildApiUrl = (path: string) => {
-   const baseUrl = import.meta.env.VITE_API_URL ?? DEFAULT_API_BASE_URL
-
-   return new URL(path, baseUrl).toString()
-}
+import { apiClient } from '@/shared/api/http';
 
 const fetchApplications = async () => {
-   const response = await fetch(buildApiUrl("/applications"))
+   try {
+      const response = await apiClient.get<ApplicationsList>('/applications');
 
-   if (!response.ok) {
-      throw new Error(`Failed to fetch applications: ${response.status}`)
+      return response.data.data;
+   } catch (error) {
+      if (axios.isAxiosError(error)) {
+         throw new Error(
+            `Failed to fetch applications: ${error.response?.status ?? 'network'}`,
+         );
+      }
+
+      throw error;
    }
+};
 
-   const data = (await response.json()) as ApplicationsList
-
-   return data.data
-}
-
-export { fetchApplications }
+export { fetchApplications };

@@ -1,24 +1,24 @@
-import { clearSession } from "@/entities/session"
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar"
+import { logoutSession } from '@/entities/session';
+import { ROUTES } from '@/shared/config/routes';
+import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar';
 import {
    DropdownMenu,
    DropdownMenuContent,
    DropdownMenuItem,
    DropdownMenuLabel,
    DropdownMenuTrigger,
-} from "@/shared/ui/dropdown-menu"
+} from '@/shared/ui/dropdown-menu';
 import {
    SidebarMenu,
    SidebarMenuButton,
    SidebarMenuItem,
    useSidebar,
-} from "@/shared/ui/sidebar"
-import { ROUTES } from "@/shared/config/routes"
+} from '@/shared/ui/sidebar';
 import {
    EllipsisVerticalIcon,
    LogOutIcon,
-} from "lucide-react"
-import { useNavigate } from "react-router"
+} from 'lucide-react';
+import { useNavigate } from 'react-router';
 
 export function NavUser({
    user,
@@ -29,13 +29,13 @@ export function NavUser({
       avatar: string
    }
 }) {
-   const { isMobile } = useSidebar()
-   const navigate = useNavigate()
+   const { isMobile } = useSidebar();
+   const navigate = useNavigate();
 
-   const handleLogout = () => {
-      clearSession()
-      navigate(ROUTES.login, { replace: true })
-   }
+   const handleLogout = async () => {
+      await logoutSession();
+      navigate(ROUTES.login, { replace: true });
+   };
 
    return (
       <SidebarMenu>
@@ -95,5 +95,5 @@ export function NavUser({
             </DropdownMenu>
          </SidebarMenuItem>
       </SidebarMenu>
-   )
+   );
 }

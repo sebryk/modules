@@ -1,27 +1,29 @@
-import type { ReactNode } from "react"
-import { Navigate, useLocation } from "react-router"
+import type { ReactNode } from 'react';
+import { Navigate, useLocation } from 'react-router';
 
-import { isAuthenticated } from "@/entities/session"
-import { ROUTES } from "@/shared/config/routes"
+import { useSessionStore } from '@/entities/session';
+import { ROUTES } from '@/shared/config/routes';
 
-type ProtectedRouteProps = {
-   children: ReactNode
-}
 
-const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-   const location = useLocation()
+const ProtectedRoute = ({ children }: {children: ReactNode}) => {
+   const location = useLocation();
+   const sessionStatus = useSessionStore((state) => state.status);
 
-   if (!isAuthenticated()) {
+   if (sessionStatus === 'unknown') {
+      return null;
+   }
+
+   if (sessionStatus !== 'authenticated') {
       return (
          <Navigate
             to={ROUTES.login}
             replace
             state={{ from: { pathname: location.pathname } }}
          />
-      )
+      );
    }
 
-   return <>{children}</>
-}
+   return <>{children}</>;
+};
 
-export { ProtectedRoute }
+export { ProtectedRoute };

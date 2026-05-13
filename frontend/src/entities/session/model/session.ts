@@ -1,106 +1,62 @@
-import { create } from "zustand"
+import { create } from 'zustand';
 
-const SESSION_STORAGE_KEY = "mock-session"
+import { logoutRequest } from '@/shared/api/auth';
+import { queryClient } from '@/shared/api/query-client';
+import { authQueryKeys } from '@/shared/api/query-keys';
 
-type MockSession = {
-   login: string
-   password: string
-}
+type SessionStatus = 'unknown' | 'authenticated' | 'anonymous';
 
 type SessionState = {
-   session: MockSession | null
-   writeSession: (session: MockSession) => void
-   clearSession: () => void
-}
-
-const isBrowser = () => typeof window !== "undefined"
-
-const parseSession = (rawValue: string | null) => {
-   if (!rawValue) {
-      return null
-   }
-
-   try {
-      const parsedValue = JSON.parse(rawValue) as Partial<MockSession>
-
-      if (
-         typeof parsedValue.login !== "string" ||
-         typeof parsedValue.password !== "string"
-      ) {
-         return null
-      }
-
-      return {
-         login: parsedValue.login,
-         password: parsedValue.password,
-      } satisfies MockSession
-   } catch {
-      return null
-   }
-}
-
-const readSession = () => {
-   if (!isBrowser()) {
-      return null
-   }
-
-   return parseSession(window.localStorage.getItem(SESSION_STORAGE_KEY))
-}
-
-const persistSession = (session: MockSession | null) => {
-   if (!isBrowser()) {
-      return
-   }
-
-   if (session) {
-      window.localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session))
-      return
-   }
-
-   window.localStorage.removeItem(SESSION_STORAGE_KEY)
-}
+   accessToken: string | null;
+   status: SessionStatus;
+   setAccessToken: (accessToken: string) => void;
+   clearSession: () => void;
+};
 
 const useSessionStore = create<SessionState>((set) => ({
-   session: readSession(),
-   writeSession: (session) => {
-      persistSession(session)
-      set({ session })
+   accessToken: null,
+   status: 'unknown',
+   setAccessToken: (accessToken) => {
+      set({
+         accessToken,
+         status: 'authenticated',
+      });
    },
    clearSession: () => {
-      persistSession(null)
-      set({ session: null })
+      set({
+         accessToken: null,
+         status: 'anonymous',
+      });
    },
-}))
+}));
 
-if (isBrowser()) {
-   window.addEventListener("storage", (event) => {
-      if (event.storageArea !== window.localStorage) {
-         return
-      }
+const setAccessToken = (accessToken: string) =>
+   useSessionStore.getState().setAccessToken(accessToken);
 
-      if (event.key !== SESSION_STORAGE_KEY && event.key !== null) {
-         return
-      }
+const clearSession = () => useSessionStore.getState().clearSession();
 
-      useSessionStore.setState({
-         session: parseSession(event.newValue),
-      })
-   })
-}
+const getAccessToken = () => useSessionStore.getState().accessToken;
 
-const writeSession = (session: MockSession) =>
-   useSessionStore.getState().writeSession(session)
+const getSessionStatus = () => useSessionStore.getState().status;
 
-const clearSession = () => useSessionStore.getState().clearSession()
+const isAuthenticated = () => getSessionStatus() === 'authenticated';
 
-const isAuthenticated = () => useSessionStore.getState().session !== null
+const logoutSession = async (): Promise<void> => {
+   try {
+      await logoutRequest();
+   } finally {
+      clearSession();
+      queryClient.removeQueries({ queryKey: authQueryKeys.bootstrap() });
+   }
+};
 
 export {
-   SESSION_STORAGE_KEY,
    clearSession,
+   getAccessToken,
+   getSessionStatus,
    isAuthenticated,
-   readSession,
+   logoutSession,
+   setAccessToken,
    useSessionStore,
-   writeSession,
-}
-export type { MockSession }
+};
+export type { SessionStatus };
