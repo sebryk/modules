@@ -6,6 +6,7 @@ import { FastifyAdapter } from '@nestjs/platform-fastify';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 
 import { AppModule } from '../src/app.module';
+import { registerCookiePlugin } from '../src/auth/auth-cookie';
 import { PASSWORD_HASH_OPTIONS } from '../src/auth/auth.constants';
 import { PrismaService } from '../src/prisma/prisma.service';
 
@@ -20,16 +21,6 @@ const buildPrismaMock = () => ({
       findMany: jest.fn(),
    },
 });
-
-const isAuthTokensResponse = (
-   value: unknown,
-): value is { accessToken: string; refreshToken: string } =>
-   typeof value === 'object' &&
-   value !== null &&
-   'accessToken' in value &&
-   typeof value.accessToken === 'string' &&
-   'refreshToken' in value &&
-   typeof value.refreshToken === 'string';
 
 const isAccessTokenResponse = (
    value: unknown,
@@ -66,6 +57,7 @@ describe('Auth RBAC', () => {
       app = moduleRef.createNestApplication<NestFastifyApplication>(
          new FastifyAdapter(),
       );
+      await registerCookiePlugin(app);
       app.useGlobalPipes(
          new ValidationPipe({
             whitelist: true,
@@ -82,7 +74,7 @@ describe('Auth RBAC', () => {
       await app.close();
    });
 
-   it('returns tokens on successful login', async () => {
+   it('returns access token in body and refresh token in cookie on successful login', async () => {
       prismaMock.user.findUnique.mockResolvedValue({
          id: 'user-1',
          email: 'admin@example.com',
@@ -102,7 +94,15 @@ describe('Auth RBAC', () => {
       expect(response.statusCode).toBe(200);
       const responseBody: unknown = JSON.parse(response.body);
 
-      expect(isAuthTokensResponse(responseBody)).toBe(true);
+      expect(isAccessTokenResponse(responseBody)).toBe(true);
+      expect(response.cookies).toEqual(
+         expect.arrayContaining([
+            expect.objectContaining({
+               name: 'refreshToken',
+               httpOnly: true,
+            }),
+         ]),
+      );
    });
 
    it('returns 401 for invalid credentials', async () => {
@@ -300,19 +300,19 @@ describe('Auth RBAC', () => {
          createdAt: new Date('2024-01-01T00:00:00.000Z'),
       });
 
-      const refreshToken = await jwtService.signAsync(
-         { sub: 'user-1' },
-         {
-            secret: process.env.JWT_REFRESH_SECRET,
-            expiresIn: '7d',
-         },
-      );
-
       const response = await app.inject({
          method: 'POST',
          url: '/auth/refresh',
          headers: {
-            authorization: `Bearer ${refreshToken}`,
+            cookie: [
+               `refreshToken=${await jwtService.signAsync(
+                  { sub: 'user-1' },
+                  {
+                     secret: process.env.JWT_REFRESH_SECRET,
+                     expiresIn: '7d',
+                  },
+               )}`,
+            ].join('; '),
          },
       });
 
@@ -335,11 +335,28 @@ describe('Auth RBAC', () => {
          method: 'POST',
          url: '/auth/refresh',
          headers: {
-            authorization: `Bearer ${accessToken}`,
+            cookie: `refreshToken=${accessToken}`,
          },
       });
 
       expect(response.statusCode).toBe(401);
+   });
+
+   it('clears refresh cookie on logout', async () => {
+      const response = await app.inject({
+         method: 'POST',
+         url: '/auth/logout',
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.cookies).toEqual(
+         expect.arrayContaining([
+            expect.objectContaining({
+               name: 'refreshToken',
+               value: '',
+            }),
+         ]),
+      );
    });
 
    it('stores argon2id password hashes', () => {

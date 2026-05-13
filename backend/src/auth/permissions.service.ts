@@ -7,37 +7,26 @@ export class PermissionsService {
    public constructor(private readonly prismaService: PrismaService) {}
 
    public async getUserPermissions(userId: string): Promise<Set<string>> {
-      const roleAssignments = await this.prismaService.roleAssignment.findMany({
+      const permissions = await this.prismaService.permission.findMany({
          where: {
-            userId,
-         },
-         select: {
-            role: {
-               select: {
-                  rolePermissions: {
-                     select: {
-                        permission: {
-                           select: {
-                              resource: true,
-                              action: true,
-                           },
-                        },
+            rolePermissions: {
+               some: {
+                  role: {
+                     roleAssignments: {
+                        some: { userId },
                      },
                   },
                },
             },
          },
+         select: {
+            resource: true,
+            action: true,
+         },
       });
 
-      const permissions = new Set<string>();
-
-      for (const assignment of roleAssignments) {
-         for (const rolePermission of assignment.role.rolePermissions) {
-            const { resource, action } = rolePermission.permission;
-            permissions.add(`${resource}:${action}`);
-         }
-      }
-
-      return permissions;
+      return new Set(
+         permissions.map(({ resource, action }) => `${resource}:${action}`),
+      );
    }
 }

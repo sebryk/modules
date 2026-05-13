@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter } from '@nestjs/platform-fastify';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 
+import { registerCookiePlugin } from './auth/auth-cookie';
 import { AppModule } from './app.module';
 
 const bootstrap = async (): Promise<void> => {
@@ -10,6 +11,13 @@ const bootstrap = async (): Promise<void> => {
       AppModule,
       new FastifyAdapter(),
    );
+
+   await registerCookiePlugin(app);
+
+   app.enableCors({
+      origin: process.env.FRONTEND_ORIGIN ?? 'http://localhost:5173',
+      credentials: true,
+   });
 
    app.enableShutdownHooks();
    app.useGlobalPipes(

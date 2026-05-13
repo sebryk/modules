@@ -9,3 +9,9 @@ export type MeResponse = {
    user: BaseUser;
    permissions: string[];
 };
+
+export type TokenType = 'ACCESS' | 'REFRESH';
+
+export type JwtPayload = {
+   sub: string;
+};

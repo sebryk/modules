@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import type { FastifyRequest } from 'fastify';
 
-type JwtPayload = {
-   sub: string;
-};
+import { getRefreshTokenCookie } from '../auth-cookie';
+import { JwtPayload } from '../auth.types';
 
 @Injectable()
 export class RefreshJwtStrategy extends PassportStrategy(
@@ -14,7 +14,10 @@ export class RefreshJwtStrategy extends PassportStrategy(
 ) {
    public constructor(configService: ConfigService) {
       super({
-         jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+         jwtFromRequest: ExtractJwt.fromExtractors([
+            (request: FastifyRequest | undefined) =>
+               request ? getRefreshTokenCookie(request) : null,
+         ]),
          ignoreExpiration: false,
          secretOrKey: configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
       });

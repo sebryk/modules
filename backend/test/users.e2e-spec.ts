@@ -5,6 +5,7 @@ import { FastifyAdapter } from '@nestjs/platform-fastify';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 
 import { AppModule } from '../src/app.module';
+import { registerCookiePlugin } from '../src/auth/auth-cookie';
 import { PrismaService } from '../src/prisma/prisma.service';
 
 const ADMIN_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
@@ -87,6 +88,7 @@ describe('Users management', () => {
       app = moduleRef.createNestApplication<NestFastifyApplication>(
          new FastifyAdapter(),
       );
+      await registerCookiePlugin(app);
       app.useGlobalPipes(
          new ValidationPipe({
             whitelist: true,

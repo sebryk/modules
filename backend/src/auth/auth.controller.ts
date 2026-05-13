@@ -6,10 +6,12 @@ import {
    HttpStatus,
    Post,
    Req,
+   Res,
    UseGuards,
 } from '@nestjs/common';
-import type { FastifyRequest } from 'fastify';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 
+import { clearRefreshTokenCookie, setRefreshTokenCookie } from './auth-cookie';
 import { Public } from './decorators/public.decorator';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -29,8 +31,22 @@ export class AuthController {
    @Public()
    @Post('login')
    @HttpCode(HttpStatus.OK)
-   public async login(@Body() loginDto: LoginDto): Promise<AuthTokens> {
-      return this.authService.login(loginDto.email, loginDto.password);
+   public async login(
+      @Body() loginDto: LoginDto,
+      @Res({ passthrough: true }) reply: FastifyReply,
+   ): Promise<Pick<AuthTokens, 'accessToken'>> {
+      const { accessToken, refreshToken } = await this.authService.login(
+         loginDto.email,
+         loginDto.password,
+      );
+
+      setRefreshTokenCookie(
+         reply,
+         refreshToken,
+         this.authService.getRefreshTokenTtl(),
+      );
+
+      return { accessToken };
    }
 
    @Public()
@@ -41,6 +57,17 @@ export class AuthController {
       @Req() request: AuthenticatedRequest,
    ): Promise<Pick<AuthTokens, 'accessToken'>> {
       return this.authService.refresh(request.user.id);
+   }
+
+   @Public()
+   @Post('logout')
+   @HttpCode(HttpStatus.OK)
+   public logout(@Res({ passthrough: true }) reply: FastifyReply): {
+      success: true;
+   } {
+      clearRefreshTokenCookie(reply);
+
+      return { success: true };
    }
 
    @Get('me')
