@@ -1,16 +1,16 @@
-import { useBootstrapSession } from '@/entities/session';
+import { useBootstrapSession } from "@/entities/session"
 
-import { RootLayout } from '@/app/layouts/root-layout';
-import { AppRouter } from '@/app/router';
+import { RootLayout } from "@/app/layouts/root-layout"
+import { AppRouter } from "@/app/router"
 
 const App = () => {
-   useBootstrapSession();
+   useBootstrapSession()
 
    return (
       <RootLayout>
          <AppRouter />
       </RootLayout>
-   );
-};
+   )
+}
 
-export default App;
+export default App

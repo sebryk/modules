@@ -8,9 +8,7 @@ const RootLayout = ({ children }: PropsWithChildren) => {
    return (
       <ThemeProvider>
          <TooltipProvider>
-            <BrowserRouter>
-               {children}
-            </BrowserRouter>
+            <BrowserRouter>{children}</BrowserRouter>
          </TooltipProvider>
       </ThemeProvider>
    )

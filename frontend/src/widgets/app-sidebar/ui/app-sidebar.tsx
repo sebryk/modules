@@ -1,11 +1,12 @@
-import * as React from 'react';
-import { Apple } from 'lucide-react';
-import { Link } from 'react-router';
+import { useCurrentUser } from "@/entities/user"
+import * as React from "react"
+import { Apple } from "lucide-react"
+import { Link } from "react-router"
 
-import { useSessionStore } from '@/entities/session';
-import { appRoutes } from '@/shared/config/navigation';
-import { NavMain } from '@/shared/ui/nav-main';
-import { NavUser } from '@/shared/ui/nav-user';
+import { useSessionStore } from "@/entities/session"
+import { appRoutes } from "@/shared/config/navigation"
+import { NavMain } from "@/shared/ui/nav-main"
+import { NavUser } from "@/shared/ui/nav-user"
 import {
    Sidebar,
    SidebarContent,
@@ -14,12 +15,12 @@ import {
    SidebarMenu,
    SidebarMenuButton,
    SidebarMenuItem,
-} from '@/shared/ui/sidebar';
+} from "@/shared/ui/sidebar"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-   const sessionStatus = useSessionStore((state) => state.status);
-   const userLabel =
-      sessionStatus === 'authenticated' ? 'Signed in user' : 'Guest';
+   const sessionStatus = useSessionStore((state) => state.status)
+   const { data } = useCurrentUser()
+   const currentUser = data?.user
 
    return (
       <Sidebar collapsible="icon" {...props}>
@@ -44,14 +45,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <NavMain items={appRoutes} />
          </SidebarContent>
          <SidebarFooter>
-            <NavUser
-               user={{
-                  name: userLabel,
-                  email: userLabel,
-                  avatar: '',
-               }}
-            />
+            {sessionStatus === "authenticated" && currentUser && (
+               <NavUser
+                  firstName={currentUser.firstName || ""}
+                  lastName={currentUser.lastName || ""}
+                  email={currentUser?.email || ""}
+               />
+            )}
          </SidebarFooter>
       </Sidebar>
-   );
+   )
 }

@@ -1,10 +1,10 @@
-import { useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useEffect } from "react"
+import { useQuery } from "@tanstack/react-query"
 
-import { authQueryKeys } from '@/shared/api/query-keys';
-import { refreshAccessTokenRequest } from '@/shared/api/auth';
+import { authQueryKeys } from "@/shared/api/query-keys"
+import { refreshAccessTokenRequest } from "@/shared/api/auth"
 
-import { clearSession, setAccessToken } from './session';
+import { clearSession, setAccessToken } from "./session"
 
 const useBootstrapSession = () => {
    const query = useQuery({
@@ -15,17 +15,17 @@ const useBootstrapSession = () => {
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
       refetchOnMount: false,
-   });
+   })
 
    useEffect(() => {
       if (query.data) {
-         setAccessToken(query.data);
+         setAccessToken(query.data)
       } else if (query.isError) {
-         clearSession();
+         clearSession()
       }
-   }, [query.data, query.isError]);
+   }, [query.data, query.isError])
 
-   return query;
-};
+   return query
+}
 
-export { useBootstrapSession };
+export { useBootstrapSession }

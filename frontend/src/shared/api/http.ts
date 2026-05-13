@@ -1,82 +1,82 @@
-import axios, { AxiosError } from 'axios';
+import axios, { AxiosError } from "axios"
 
 import {
    clearSession,
    getAccessToken,
    setAccessToken,
-} from '@/entities/session';
-import { refreshAccessTokenRequest } from '@/shared/api/auth';
-import { getApiBaseUrl } from '@/shared/api/config';
-import { ROUTES } from '@/shared/config/routes';
+} from "@/entities/session"
+import { refreshAccessTokenRequest } from "@/shared/api/auth"
+import { getApiBaseUrl } from "@/shared/api/config"
+import { ROUTES } from "@/shared/config/routes"
 
-declare module 'axios' {
+declare module "axios" {
    export interface AxiosRequestConfig {
-      skipAuthRefresh?: boolean;
+      skipAuthRefresh?: boolean
    }
 
    export interface InternalAxiosRequestConfig {
-      _retry?: boolean;
-      skipAuthRefresh?: boolean;
+      _retry?: boolean
+      skipAuthRefresh?: boolean
    }
 }
 
 const apiClient = axios.create({
    baseURL: getApiBaseUrl(),
    withCredentials: true,
-});
+})
 
 const redirectToLogin = () => {
-   if (typeof window === 'undefined') {
-      return;
+   if (typeof window === "undefined") {
+      return
    }
 
    if (window.location.pathname === ROUTES.login) {
-      return;
+      return
    }
 
-   window.location.replace(ROUTES.login);
-};
+   window.location.replace(ROUTES.login)
+}
 
-let refreshPromise: Promise<string> | null = null;
+let refreshPromise: Promise<string> | null = null
 
 const recoverAccessToken = async (): Promise<string> => {
    if (!refreshPromise) {
       refreshPromise = (async () => {
          try {
-            const accessToken = await refreshAccessTokenRequest();
-            setAccessToken(accessToken);
+            const accessToken = await refreshAccessTokenRequest()
+            setAccessToken(accessToken)
 
-            return accessToken;
+            return accessToken
          } catch (error) {
-            clearSession();
-            redirectToLogin();
-            throw error;
+            clearSession()
+            redirectToLogin()
+            throw error
          } finally {
-            refreshPromise = null;
+            refreshPromise = null
          }
-      })();
+      })()
    }
 
-   return refreshPromise;
-};
+   return refreshPromise
+}
 
 apiClient.interceptors.request.use((config) => {
-   const accessToken = getAccessToken();
+   const accessToken = getAccessToken()
 
    if (!accessToken) {
-      return config;
+      return config
    }
 
-   config.headers.set('authorization', `Bearer ${accessToken}`);
+   config.headers.set("authorization", `Bearer ${accessToken}`)
 
-   return config;
-});
+   return config
+})
 
 apiClient.interceptors.response.use(
    (response) => response,
    async (error: AxiosError) => {
-      const responseStatus = error.response?.status;
-      const config = error.config;
+      const responseStatus = error.response?.status
+      const config = error.config
 
       if (
          responseStatus !== 401 ||
@@ -84,15 +84,15 @@ apiClient.interceptors.response.use(
          config._retry ||
          config.skipAuthRefresh
       ) {
-         throw error;
+         throw error
       }
 
-      config._retry = true;
-      const nextAccessToken = await recoverAccessToken();
-      config.headers.set('authorization', `Bearer ${nextAccessToken}`);
+      config._retry = true
+      const nextAccessToken = await recoverAccessToken()
+      config.headers.set("authorization", `Bearer ${nextAccessToken}`)
 
-      return apiClient(config);
-   },
-);
+      return apiClient(config)
+   }
+)
 
-export { apiClient };
+export { apiClient }

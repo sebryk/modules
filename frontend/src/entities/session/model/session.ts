@@ -1,54 +1,55 @@
-import { create } from 'zustand';
+import { create } from "zustand"
 
-import { logoutRequest } from '@/shared/api/auth';
-import { queryClient } from '@/shared/api/query-client';
-import { authQueryKeys } from '@/shared/api/query-keys';
+import { logoutRequest } from "@/shared/api/auth"
+import { queryClient } from "@/shared/api/query-client"
+import { authQueryKeys, userQueryKeys } from "@/shared/api/query-keys"
 
-type SessionStatus = 'unknown' | 'authenticated' | 'anonymous';
+type SessionStatus = "unknown" | "authenticated" | "anonymous"
 
 type SessionState = {
-   accessToken: string | null;
-   status: SessionStatus;
-   setAccessToken: (accessToken: string) => void;
-   clearSession: () => void;
-};
+   accessToken: string | null
+   status: SessionStatus
+   setAccessToken: (accessToken: string) => void
+   clearSession: () => void
+}
 
 const useSessionStore = create<SessionState>((set) => ({
    accessToken: null,
-   status: 'unknown',
+   status: "unknown",
    setAccessToken: (accessToken) => {
       set({
          accessToken,
-         status: 'authenticated',
-      });
+         status: "authenticated",
+      })
    },
    clearSession: () => {
       set({
          accessToken: null,
-         status: 'anonymous',
-      });
+         status: "anonymous",
+      })
    },
-}));
+}))
 
 const setAccessToken = (accessToken: string) =>
-   useSessionStore.getState().setAccessToken(accessToken);
+   useSessionStore.getState().setAccessToken(accessToken)
 
-const clearSession = () => useSessionStore.getState().clearSession();
+const clearSession = () => useSessionStore.getState().clearSession()
 
-const getAccessToken = () => useSessionStore.getState().accessToken;
+const getAccessToken = () => useSessionStore.getState().accessToken
 
-const getSessionStatus = () => useSessionStore.getState().status;
+const getSessionStatus = () => useSessionStore.getState().status
 
-const isAuthenticated = () => getSessionStatus() === 'authenticated';
+const isAuthenticated = () => getSessionStatus() === "authenticated"
 
 const logoutSession = async (): Promise<void> => {
    try {
-      await logoutRequest();
+      await logoutRequest()
    } finally {
-      clearSession();
-      queryClient.removeQueries({ queryKey: authQueryKeys.bootstrap() });
+      clearSession()
+      queryClient.removeQueries({ queryKey: authQueryKeys.bootstrap() })
+      queryClient.removeQueries({ queryKey: userQueryKeys.me() })
    }
-};
+}
 
 export {
    clearSession,
@@ -58,5 +59,5 @@ export {
    logoutSession,
    setAccessToken,
    useSessionStore,
-};
-export type { SessionStatus };
+}
+export type { SessionStatus }
