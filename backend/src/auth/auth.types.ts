@@ -5,8 +5,7 @@ export type AuthTokens = {
    refreshToken: string;
 };
 
-export type MeResponse = {
-   user: BaseUser;
+export type Me = BaseUser & {
    permissions: string[];
 };
 

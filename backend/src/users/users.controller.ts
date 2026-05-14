@@ -1,38 +1,64 @@
-import { Body, Controller, Get, Post, Req } from '@nestjs/common';
-import type { FastifyRequest } from 'fastify';
+import {
+   Body,
+   Controller,
+   Delete,
+   Get,
+   Param,
+   ParseUUIDPipe,
+   Post,
+   Query,
+   Req,
+} from '@nestjs/common';
+import type { AuthenticatedRequest } from '../common/types/api';
 
 import { RequirePermission } from '../auth/decorators/require-permission.decorator';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UsersService } from './users.service';
-import type {
-   CreateUserResponse,
-   RolesListResponse,
-} from './users.types';
+import type { User } from './users.types';
 
-type AuthenticatedRequest = FastifyRequest & {
-   user: {
-      id: string;
-   };
-};
-
-@Controller()
+@Controller('users')
 export class UsersController {
    public constructor(private readonly usersService: UsersService) {}
 
-   @Post('users')
+   @Get()
+   @RequirePermission('user:read')
+   public async findAll(
+      @Query('include') include?: string,
+   ): Promise<{ data: User[] }> {
+      const queries = include?.split(',') ?? [];
+      const users = await this.usersService.findAll({
+         withRoleAssigments: queries.includes('role-assignment'),
+      });
+      return { data: users };
+   }
+
+   @Get(':id')
+   @RequirePermission('user:read')
+   public async findById(
+      @Param('id', new ParseUUIDPipe()) id: string,
+   ): Promise<{ data: User }> {
+      const user = await this.usersService.findById(id);
+      return { data: user };
+   }
+
+   @Post()
    @RequirePermission('user:create')
    public async create(
       @Body() createUserDto: CreateUserDto,
       @Req() request: AuthenticatedRequest,
-   ): Promise<CreateUserResponse> {
-      return this.usersService.createUser(request.user.id, createUserDto);
+   ): Promise<{ data: User }> {
+      const user = await this.usersService.createUser(
+         request.user.id,
+         createUserDto,
+      );
+      return { data: user };
    }
 
-   @Get('roles')
-   @RequirePermission('role:read')
-   public async findRoles(): Promise<RolesListResponse> {
-      const items = await this.usersService.findRoles();
-
-      return { items };
+   @Delete(':id')
+   @RequirePermission('user:delete')
+   public async delete(
+      @Param('id', new ParseUUIDPipe()) id: string,
+   ): Promise<void> {
+      await this.usersService.deleteUser(id);
    }
 }

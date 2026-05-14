@@ -7,7 +7,7 @@ import type { SignOptions } from 'jsonwebtoken';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { PASSWORD_HASH_OPTIONS } from './auth.constants';
-import type { AuthTokens, MeResponse, TokenType } from './auth.types';
+import type { AuthTokens, Me, TokenType } from './auth.types';
 import { PermissionsService } from './permissions.service';
 
 const DEFAULT_TOKEN_TTLS = {
@@ -66,7 +66,7 @@ export class AuthService {
       return { accessToken: await this.issueToken(user, 'ACCESS') };
    }
 
-   public async getMe(userId: string): Promise<MeResponse> {
+   public async getMe(userId: string): Promise<Me> {
       const user = await this.prismaService.user.findUnique({
          where: { id: userId },
          select: {
@@ -87,7 +87,7 @@ export class AuthService {
          await this.permissionsService.getUserPermissions(userId);
 
       return {
-         user,
+         ...user,
          permissions: [...permissions].sort(),
       };
    }

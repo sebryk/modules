@@ -10,7 +10,6 @@ import {
    Post,
    Req,
 } from '@nestjs/common';
-import type { FastifyRequest } from 'fastify';
 
 import { RequirePermission } from '../auth/decorators/require-permission.decorator';
 import { ApplicationsService } from './applications.service';
@@ -18,12 +17,7 @@ import type { Application, ApplicationsList } from './applications.types';
 import { CreateApplicationDto } from './dto/create-application.dto';
 import { UpdateApplicationDto } from './dto/update-application.dto';
 import { UpdateApplicationStatusDto } from './dto/update-application-status.dto';
-
-type AuthenticatedRequest = FastifyRequest & {
-   user: {
-      id: string;
-   };
-};
+import type { AuthenticatedRequest } from '../common/types/api';
 
 @Controller('applications')
 export class ApplicationsController {
@@ -61,7 +55,10 @@ export class ApplicationsController {
       @Param('id') id: string,
       @Body() updateApplicationDto: UpdateApplicationDto,
    ): Promise<Application> {
-      return this.applicationsService.updateApplication(id, updateApplicationDto);
+      return this.applicationsService.updateApplication(
+         id,
+         updateApplicationDto,
+      );
    }
 
    @Patch(':id/status')

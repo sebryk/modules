@@ -14,7 +14,10 @@ const systemPermissions = [
    'application:update',
    'application:delete',
    'application:update_status',
+   'user:read',
    'user:create',
+   'user:update',
+   'user:delete',
    'role:read',
 ] as const satisfies readonly string[];
 
@@ -29,12 +32,12 @@ const seed = async (): Promise<void> => {
    const adminRole = await prisma.role.upsert({
       where: { name: 'admin' },
       update: {
-         description: 'System administrator',
+         description: 'Системный администратор',
          isSystem: true,
       },
       create: {
          name: 'admin',
-         description: 'System administrator',
+         description: 'Системный администратор',
          isSystem: true,
       },
    });
@@ -82,16 +85,16 @@ const seed = async (): Promise<void> => {
    const adminUser = await prisma.user.upsert({
       where: { email: adminEmail },
       update: {
-         firstName: 'System',
-         lastName: 'Administrator',
-         position: 'Administrator',
+         firstName: 'Иван',
+         lastName: 'Петров',
+         position: 'Администратор',
          passwordHash,
       },
       create: {
          email: adminEmail,
-         firstName: 'System',
-         lastName: 'Administrator',
-         position: 'Administrator',
+         firstName: 'Иван',
+         lastName: 'Петров',
+         position: 'Администратор',
          passwordHash,
       },
    });

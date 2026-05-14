@@ -9,20 +9,15 @@ import {
    Res,
    UseGuards,
 } from '@nestjs/common';
-import type { FastifyReply, FastifyRequest } from 'fastify';
+import type { FastifyReply } from 'fastify';
 
 import { clearRefreshTokenCookie, setRefreshTokenCookie } from './auth-cookie';
 import { Public } from './decorators/public.decorator';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshJwtGuard } from './guards/refresh-jwt.guard';
-import type { AuthTokens, MeResponse } from './auth.types';
-
-type AuthenticatedRequest = FastifyRequest & {
-   user: {
-      id: string;
-   };
-};
+import type { AuthTokens, Me } from './auth.types';
+import { AuthenticatedRequest } from '../common/types/api';
 
 @Controller('auth')
 export class AuthController {
@@ -71,9 +66,7 @@ export class AuthController {
    }
 
    @Get('me')
-   public async getMe(
-      @Req() request: AuthenticatedRequest,
-   ): Promise<MeResponse> {
+   public async getMe(@Req() request: AuthenticatedRequest): Promise<Me> {
       return this.authService.getMe(request.user.id);
    }
 }

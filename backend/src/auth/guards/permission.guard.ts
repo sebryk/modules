@@ -5,16 +5,10 @@ import {
    Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import type { FastifyRequest } from 'fastify';
 
 import { PERMISSION_KEY } from '../auth.constants';
 import { PermissionsService } from '../permissions.service';
-
-type AuthenticatedRequest = FastifyRequest & {
-   user?: {
-      id: string;
-   };
-};
+import { AuthenticatedRequest } from '../../common/types/api';
 
 @Injectable()
 export class PermissionGuard implements CanActivate {

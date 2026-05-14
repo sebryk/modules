@@ -1,22 +1,20 @@
 import type { BaseUser } from '../common/types/user';
 
-export type CreateUserResponse = {
-   user: BaseUser;
-   roles: UserRole[];
-};
+export type User =
+   | BaseUser
+   | {
+        roleAssignments: UserRoleAssignment[];
+     };
 
-export type UserRole = {
-   id: string;
-   name: string;
-};
-
-export type Roles = {
+export type Role = {
    id: string;
    name: string;
    description: string | null;
    isSystem: boolean;
 };
 
-export type RolesListResponse = {
-   items: Roles[];
+export type UserRoleAssignment = {
+   role: Role;
+   grantedBy: string | null;
+   createdAt: Date;
 };

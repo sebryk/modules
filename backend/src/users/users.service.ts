@@ -2,6 +2,7 @@ import {
    BadRequestException,
    ConflictException,
    Injectable,
+   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as argon2 from 'argon2';
@@ -9,16 +10,76 @@ import * as argon2 from 'argon2';
 import { PASSWORD_HASH_OPTIONS } from '../auth/auth.constants';
 import { PrismaService } from '../prisma/prisma.service';
 import type { CreateUserDto } from './dto/create-user.dto';
-import type { CreateUserResponse, Roles, UserRole } from './users.types';
+import type { Role, User } from './users.types';
+
+const userWithRolesSelect = {
+   id: true,
+   email: true,
+   firstName: true,
+   lastName: true,
+   position: true,
+   createdAt: true,
+} satisfies Prisma.UserSelect;
+
+const roleAssignmentsSelect = {
+   roleAssignments: {
+      select: {
+         grantedBy: true,
+         createdAt: true,
+         role: {
+            select: {
+               id: true,
+               name: true,
+               description: true,
+               isSystem: true,
+            },
+         },
+      },
+      orderBy: {
+         role: {
+            name: 'asc',
+         },
+      },
+   },
+} satisfies Prisma.UserSelect;
 
 @Injectable()
 export class UsersService {
    public constructor(private readonly prismaService: PrismaService) {}
 
+   public async findAll({ withRoleAssigments = false } = {}): Promise<User[]> {
+      const users = await this.prismaService.user.findMany({
+         select: {
+            ...userWithRolesSelect,
+            ...(withRoleAssigments && roleAssignmentsSelect),
+         },
+         orderBy: {
+            createdAt: 'desc',
+         },
+      });
+
+      return users;
+   }
+
+   public async findById(id: string): Promise<User> {
+      const user = await this.prismaService.user.findUnique({
+         where: {
+            id,
+         },
+         select: userWithRolesSelect,
+      });
+
+      if (!user) {
+         throw new NotFoundException(`User with id ${id} not found`);
+      }
+
+      return user;
+   }
+
    public async createUser(
       grantedBy: string,
       createUserDto: CreateUserDto,
-   ): Promise<CreateUserResponse> {
+   ): Promise<User> {
       if (createUserDto.roleIds.length === 0) {
          throw new BadRequestException('At least one role is required');
       }
@@ -45,6 +106,8 @@ export class UsersService {
          select: {
             id: true,
             name: true,
+            description: true,
+            isSystem: true,
          },
       });
 
@@ -52,7 +115,7 @@ export class UsersService {
          throw new BadRequestException('One or more roles do not exist');
       }
 
-      const roleById = new Map<string, UserRole>(
+      const roleById = new Map<string, Role>(
          roles.map((role) => [role.id, role]),
       );
       const orderedRoles = createUserDto.roleIds.map((roleId) => {
@@ -101,8 +164,12 @@ export class UsersService {
          });
 
          return {
-            user,
-            roles: orderedRoles,
+            ...user,
+            roleAssignments: orderedRoles.map((role) => ({
+               role,
+               grantedBy,
+               createdAt: user.createdAt,
+            })),
          };
       } catch (error) {
          if (
@@ -116,17 +183,19 @@ export class UsersService {
       }
    }
 
-   public async findRoles(): Promise<Roles[]> {
-      const roles = await this.prismaService.role.findMany({
-         select: {
-            id: true,
-            name: true,
-            description: true,
-            isSystem: true,
-         },
-         orderBy: [{ isSystem: 'desc' }, { name: 'asc' }],
-      });
-
-      return roles;
+   public async deleteUser(id: string): Promise<void> {
+      try {
+         await this.prismaService.user.delete({
+            where: { id },
+         });
+      } catch (error) {
+         if (
+            error instanceof Prisma.PrismaClientKnownRequestError &&
+            error.code === 'P2025'
+         ) {
+            throw new NotFoundException(`User with id ${id} not found`);
+         }
+         throw error;
+      }
    }
 }
