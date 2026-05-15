@@ -4,44 +4,17 @@ import {
    Injectable,
    NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
 import * as argon2 from 'argon2';
 
 import { PASSWORD_HASH_OPTIONS } from '../auth/auth.constants';
+import { isPrismaErrorCode } from '../prisma/prisma-errors';
 import { PrismaService } from '../prisma/prisma.service';
+import { ReplaceUserRolesDto } from '../rbac/dto/replace-user-roles.dto';
+import { baseRoleSelect } from '../rbac/rbac.select';
+import type { Role } from '../rbac/rbac.types';
 import type { CreateUserDto } from './dto/create-user.dto';
-import type { Role, User } from './users.types';
-
-const userWithRolesSelect = {
-   id: true,
-   email: true,
-   firstName: true,
-   lastName: true,
-   position: true,
-   createdAt: true,
-} satisfies Prisma.UserSelect;
-
-const roleAssignmentsSelect = {
-   roleAssignments: {
-      select: {
-         grantedBy: true,
-         createdAt: true,
-         role: {
-            select: {
-               id: true,
-               name: true,
-               description: true,
-               isSystem: true,
-            },
-         },
-      },
-      orderBy: {
-         role: {
-            name: 'asc',
-         },
-      },
-   },
-} satisfies Prisma.UserSelect;
+import type { User } from './users.types';
+import { roleAssignmentsSelect, userWithRolesSelect } from './users.select';
 
 @Injectable()
 export class UsersService {
@@ -103,12 +76,7 @@ export class UsersService {
                in: createUserDto.roleIds,
             },
          },
-         select: {
-            id: true,
-            name: true,
-            description: true,
-            isSystem: true,
-         },
+         select: baseRoleSelect,
       });
 
       if (roles.length !== createUserDto.roleIds.length) {
@@ -172,15 +140,89 @@ export class UsersService {
             })),
          };
       } catch (error) {
-         if (
-            error instanceof Prisma.PrismaClientKnownRequestError &&
-            error.code === 'P2002'
-         ) {
+         if (isPrismaErrorCode(error, 'P2002')) {
             throw new ConflictException('User with this email already exists');
          }
 
          throw error;
       }
+   }
+
+   public async replaceUserRoles(
+      userId: string,
+      grantedBy: string,
+      replaceUserRolesDto: ReplaceUserRolesDto,
+   ): Promise<User> {
+      const existingUser = await this.prismaService.user.findUnique({
+         where: {
+            id: userId,
+         },
+         select: {
+            id: true,
+         },
+      });
+
+      if (!existingUser) {
+         throw new NotFoundException(`User with id ${userId} not found`);
+      }
+
+      const roles = await this.prismaService.role.findMany({
+         where: {
+            id: {
+               in: replaceUserRolesDto.roleIds,
+            },
+         },
+         select: baseRoleSelect,
+      });
+
+      if (roles.length !== replaceUserRolesDto.roleIds.length) {
+         throw new BadRequestException('One or more roles do not exist');
+      }
+
+      const roleById = new Map<string, Role>(
+         roles.map((role) => [role.id, role]),
+      );
+      const orderedRoles = replaceUserRolesDto.roleIds.map((roleId) => {
+         const role = roleById.get(roleId);
+
+         if (!role) {
+            throw new BadRequestException('One or more roles do not exist');
+         }
+
+         return role;
+      });
+
+      await this.prismaService.$transaction(async (tx) => {
+         await tx.roleAssignment.deleteMany({
+            where: {
+               userId,
+            },
+         });
+
+         await tx.roleAssignment.createMany({
+            data: orderedRoles.map((role) => ({
+               userId,
+               roleId: role.id,
+               grantedBy,
+            })),
+         });
+      });
+
+      const user = await this.prismaService.user.findUnique({
+         where: {
+            id: userId,
+         },
+         select: {
+            ...userWithRolesSelect,
+            ...roleAssignmentsSelect,
+         },
+      });
+
+      if (!user) {
+         throw new NotFoundException(`User with id ${userId} not found`);
+      }
+
+      return user;
    }
 
    public async deleteUser(id: string): Promise<void> {
@@ -189,10 +231,7 @@ export class UsersService {
             where: { id },
          });
       } catch (error) {
-         if (
-            error instanceof Prisma.PrismaClientKnownRequestError &&
-            error.code === 'P2025'
-         ) {
+         if (isPrismaErrorCode(error, 'P2025')) {
             throw new NotFoundException(`User with id ${id} not found`);
          }
          throw error;

@@ -11,6 +11,9 @@ import { PrismaService } from '../src/prisma/prisma.service';
 const ADMIN_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const USER_ROLE_ID = '11111111-1111-4111-8111-111111111111';
 const SUPPORT_ROLE_ID = '22222222-2222-4222-8222-222222222222';
+const ROLE_PERMISSION_ID = '33333333-3333-4333-8333-333333333333';
+const SYSTEM_ROLE_ID = '44444444-4444-4444-8444-444444444444';
+const TARGET_USER_ID = '55555555-5555-4555-8555-555555555555';
 
 const buildPrismaMock = () => ({
    user: {
@@ -19,29 +22,32 @@ const buildPrismaMock = () => ({
    },
    role: {
       findMany: jest.fn(),
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+   },
+   permission: {
+      findMany: jest.fn(),
    },
    roleAssignment: {
       findMany: jest.fn(),
       createMany: jest.fn(),
+      deleteMany: jest.fn(),
+   },
+   rolePermission: {
+      createMany: jest.fn(),
+      deleteMany: jest.fn(),
    },
    $transaction: jest.fn(),
 });
 
-const buildRoleAssignments = (permissions: string[]) =>
+const buildPermissions = (permissions: string[]) =>
    permissions.map((permission) => {
       const [resource, action] = permission.split(':');
 
       return {
-         role: {
-            rolePermissions: [
-               {
-                  permission: {
-                     resource,
-                     action,
-                  },
-               },
-            ],
-         },
+         resource,
+         action,
       };
    });
 
@@ -70,7 +76,9 @@ describe('Users management', () => {
 
       const transactionContext = {
          user: prismaMock.user,
+         role: prismaMock.role,
          roleAssignment: prismaMock.roleAssignment,
+         rolePermission: prismaMock.rolePermission,
       };
       prismaMock.$transaction.mockImplementation(
          <TValue>(
@@ -115,8 +123,8 @@ describe('Users management', () => {
       );
 
    it('creates a user with assigned roles', async () => {
-      prismaMock.roleAssignment.findMany.mockResolvedValue(
-         buildRoleAssignments(['user:create']),
+      prismaMock.permission.findMany.mockResolvedValue(
+         buildPermissions(['user:create']),
       );
       prismaMock.user.findUnique.mockResolvedValue(null);
       prismaMock.role.findMany.mockResolvedValue([
@@ -172,20 +180,24 @@ describe('Users management', () => {
 
       expect(response.statusCode).toBe(201);
       expect(JSON.parse(response.body)).toEqual({
-         user: {
+         data: {
             id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
             email: 'new.user@example.com',
             firstName: 'New',
             lastName: 'User',
             position: 'Manager',
             createdAt: '2024-01-01T00:00:00.000Z',
+            roleAssignments: [
+               {
+                  grantedBy: ADMIN_ID,
+                  createdAt: '2024-01-01T00:00:00.000Z',
+                  role: {
+                     id: USER_ROLE_ID,
+                     name: 'manager',
+                  },
+               },
+            ],
          },
-         roles: [
-            {
-               id: USER_ROLE_ID,
-               name: 'manager',
-            },
-         ],
       });
       expect(prismaMock.roleAssignment.createMany).toHaveBeenCalledWith({
          data: [
@@ -207,8 +219,8 @@ describe('Users management', () => {
    });
 
    it('returns 403 when user:create permission is missing', async () => {
-      prismaMock.roleAssignment.findMany.mockResolvedValue(
-         buildRoleAssignments(['application:read']),
+      prismaMock.permission.findMany.mockResolvedValue(
+         buildPermissions(['application:read']),
       );
 
       const accessToken = await createAccessToken();
@@ -232,8 +244,8 @@ describe('Users management', () => {
    });
 
    it('returns 409 for duplicate email', async () => {
-      prismaMock.roleAssignment.findMany.mockResolvedValue(
-         buildRoleAssignments(['user:create']),
+      prismaMock.permission.findMany.mockResolvedValue(
+         buildPermissions(['user:create']),
       );
       prismaMock.user.findUnique.mockResolvedValue({
          id: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc',
@@ -265,8 +277,8 @@ describe('Users management', () => {
    });
 
    it('returns 400 for empty roleIds', async () => {
-      prismaMock.roleAssignment.findMany.mockResolvedValue(
-         buildRoleAssignments(['user:create']),
+      prismaMock.permission.findMany.mockResolvedValue(
+         buildPermissions(['user:create']),
       );
 
       const accessToken = await createAccessToken();
@@ -290,8 +302,8 @@ describe('Users management', () => {
    });
 
    it('returns 400 for unknown role ids', async () => {
-      prismaMock.roleAssignment.findMany.mockResolvedValue(
-         buildRoleAssignments(['user:create']),
+      prismaMock.permission.findMany.mockResolvedValue(
+         buildPermissions(['user:create']),
       );
       prismaMock.user.findUnique.mockResolvedValue(null);
       prismaMock.role.findMany.mockResolvedValue([
@@ -327,8 +339,8 @@ describe('Users management', () => {
    });
 
    it('returns roles for a user with role:read permission', async () => {
-      prismaMock.roleAssignment.findMany.mockResolvedValue(
-         buildRoleAssignments(['role:read']),
+      prismaMock.permission.findMany.mockResolvedValue(
+         buildPermissions(['role:read']),
       );
       prismaMock.role.findMany.mockResolvedValue([
          {
@@ -350,7 +362,7 @@ describe('Users management', () => {
 
       expect(response.statusCode).toBe(200);
       expect(JSON.parse(response.body)).toEqual({
-         items: [
+         data: [
             {
                id: USER_ROLE_ID,
                name: 'manager',
@@ -362,8 +374,8 @@ describe('Users management', () => {
    });
 
    it('returns 403 when role:read permission is missing', async () => {
-      prismaMock.roleAssignment.findMany.mockResolvedValue(
-         buildRoleAssignments(['application:read']),
+      prismaMock.permission.findMany.mockResolvedValue(
+         buildPermissions(['application:read']),
       );
 
       const accessToken = await createAccessToken();
@@ -376,5 +388,210 @@ describe('Users management', () => {
       });
 
       expect(response.statusCode).toBe(403);
+   });
+
+   it('returns permissions when include=permissions is requested', async () => {
+      prismaMock.permission.findMany.mockResolvedValue(
+         buildPermissions(['role:read']),
+      );
+      prismaMock.role.findMany.mockResolvedValue([
+         {
+            id: USER_ROLE_ID,
+            name: 'manager',
+            description: 'Can manage users',
+            isSystem: false,
+            rolePermissions: [
+               {
+                  permission: {
+                     id: ROLE_PERMISSION_ID,
+                     resource: 'user',
+                     action: 'read',
+                  },
+               },
+            ],
+         },
+      ]);
+
+      const accessToken = await createAccessToken();
+      const response = await app.inject({
+         method: 'GET',
+         url: '/roles?include=permissions',
+         headers: {
+            authorization: `Bearer ${accessToken}`,
+         },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(JSON.parse(response.body)).toEqual({
+         data: [
+            {
+               id: USER_ROLE_ID,
+               name: 'manager',
+               description: 'Can manage users',
+               isSystem: false,
+               permissions: [
+                  {
+                     id: ROLE_PERMISSION_ID,
+                     resource: 'user',
+                     action: 'read',
+                  },
+               ],
+            },
+         ],
+      });
+   });
+
+   it('creates a role for an authorized caller', async () => {
+      prismaMock.permission.findMany
+         .mockResolvedValueOnce(buildPermissions(['role:create']))
+         .mockResolvedValueOnce([
+            {
+               id: ROLE_PERMISSION_ID,
+               resource: 'user',
+               action: 'read',
+            },
+         ]);
+      prismaMock.role.create.mockResolvedValue({
+         id: USER_ROLE_ID,
+         name: 'manager',
+         description: 'Can manage users',
+         isSystem: false,
+      });
+      prismaMock.rolePermission.createMany.mockResolvedValue({ count: 1 });
+
+      const accessToken = await createAccessToken();
+      const response = await app.inject({
+         method: 'POST',
+         url: '/roles',
+         headers: {
+            authorization: `Bearer ${accessToken}`,
+         },
+         payload: {
+            name: 'manager',
+            description: 'Can manage users',
+            permissionIds: [ROLE_PERMISSION_ID],
+         },
+      });
+
+      expect(response.statusCode).toBe(201);
+      expect(JSON.parse(response.body)).toEqual({
+         data: {
+            id: USER_ROLE_ID,
+            name: 'manager',
+            description: 'Can manage users',
+            isSystem: false,
+            permissions: [
+               {
+                  id: ROLE_PERMISSION_ID,
+                  resource: 'user',
+                  action: 'read',
+               },
+            ],
+         },
+      });
+   });
+
+   it('returns 403 when updating a system role without role:manage_system', async () => {
+      prismaMock.permission.findMany
+         .mockResolvedValueOnce(buildPermissions(['role:update']))
+         .mockResolvedValueOnce(buildPermissions(['role:update']));
+      prismaMock.role.findUnique.mockResolvedValue({
+         id: SYSTEM_ROLE_ID,
+         name: 'admin',
+         description: 'System administrator',
+         isSystem: true,
+      });
+
+      const accessToken = await createAccessToken();
+      const response = await app.inject({
+         method: 'PATCH',
+         url: `/roles/${SYSTEM_ROLE_ID}`,
+         headers: {
+            authorization: `Bearer ${accessToken}`,
+         },
+         payload: {
+            name: 'admin',
+            description: 'Updated',
+            permissionIds: [],
+         },
+      });
+
+      expect(response.statusCode).toBe(403);
+   });
+
+   it('replaces roles for an existing user', async () => {
+      prismaMock.permission.findMany.mockResolvedValue(
+         buildPermissions(['role:assign']),
+      );
+      prismaMock.user.findUnique
+         .mockResolvedValueOnce({
+            id: TARGET_USER_ID,
+         })
+         .mockResolvedValueOnce({
+            id: TARGET_USER_ID,
+            email: 'user@example.com',
+            firstName: 'Test',
+            lastName: 'User',
+            position: 'Manager',
+            createdAt: new Date('2024-01-01T00:00:00.000Z'),
+            roleAssignments: [
+               {
+                  grantedBy: ADMIN_ID,
+                  createdAt: new Date('2024-01-03T00:00:00.000Z'),
+                  role: {
+                     id: SUPPORT_ROLE_ID,
+                     name: 'support',
+                     description: 'Can support users',
+                     isSystem: false,
+                  },
+               },
+            ],
+         });
+      prismaMock.role.findMany.mockResolvedValue([
+         {
+            id: SUPPORT_ROLE_ID,
+            name: 'support',
+            description: 'Can support users',
+            isSystem: false,
+         },
+      ]);
+      prismaMock.roleAssignment.deleteMany.mockResolvedValue({ count: 1 });
+      prismaMock.roleAssignment.createMany.mockResolvedValue({ count: 1 });
+
+      const accessToken = await createAccessToken();
+      const response = await app.inject({
+         method: 'PUT',
+         url: `/users/${TARGET_USER_ID}/roles`,
+         headers: {
+            authorization: `Bearer ${accessToken}`,
+         },
+         payload: {
+            roleIds: [SUPPORT_ROLE_ID],
+         },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(JSON.parse(response.body)).toEqual({
+         data: {
+            id: TARGET_USER_ID,
+            email: 'user@example.com',
+            firstName: 'Test',
+            lastName: 'User',
+            position: 'Manager',
+            createdAt: '2024-01-01T00:00:00.000Z',
+            roleAssignments: [
+               {
+                  grantedBy: ADMIN_ID,
+                  createdAt: '2024-01-03T00:00:00.000Z',
+                  role: {
+                     id: SUPPORT_ROLE_ID,
+                     name: 'support',
+                     description: 'Can support users',
+                     isSystem: false,
+                  },
+               },
+            ],
+         },
+      });
    });
 });

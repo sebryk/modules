@@ -6,9 +6,9 @@ import * as argon2 from 'argon2';
 import type { SignOptions } from 'jsonwebtoken';
 
 import { PrismaService } from '../prisma/prisma.service';
+import { PermissionsService } from '../rbac/permissions.service';
 import { PASSWORD_HASH_OPTIONS } from './auth.constants';
 import type { AuthTokens, Me, TokenType } from './auth.types';
-import { PermissionsService } from './permissions.service';
 
 const DEFAULT_TOKEN_TTLS = {
    ACCESS: '15m',

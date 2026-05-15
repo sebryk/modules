@@ -1,17 +1,11 @@
 import type { BaseUser } from '../common/types/user';
+import type { Role } from '../rbac/rbac.types';
 
 export type User =
    | BaseUser
    | {
         roleAssignments: UserRoleAssignment[];
      };
-
-export type Role = {
-   id: string;
-   name: string;
-   description: string | null;
-   isSystem: boolean;
-};
 
 export type UserRoleAssignment = {
    role: Role;

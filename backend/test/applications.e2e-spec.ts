@@ -21,26 +21,18 @@ const buildPrismaMock = () => ({
       update: jest.fn(),
       delete: jest.fn(),
    },
-   roleAssignment: {
+   permission: {
       findMany: jest.fn(),
    },
 });
 
-const buildRoleAssignments = (permissions: string[]) =>
+const buildPermissions = (permissions: string[]) =>
    permissions.map((permission) => {
       const [resource, action] = permission.split(':');
 
       return {
-         role: {
-            rolePermissions: [
-               {
-                  permission: {
-                     resource,
-                     action,
-                  },
-               },
-            ],
-         },
+         resource,
+         action,
       };
    });
 
@@ -117,8 +109,8 @@ describe('Applications management', () => {
       );
 
    it('creates an application with NEW status', async () => {
-      prismaMock.roleAssignment.findMany.mockResolvedValue(
-         buildRoleAssignments(['application:create']),
+      prismaMock.permission.findMany.mockResolvedValue(
+         buildPermissions(['application:create']),
       );
       prismaMock.application.create.mockImplementation(
          ({
@@ -167,8 +159,8 @@ describe('Applications management', () => {
    });
 
    it('ignores client-provided status on create', async () => {
-      prismaMock.roleAssignment.findMany.mockResolvedValue(
-         buildRoleAssignments(['application:create']),
+      prismaMock.permission.findMany.mockResolvedValue(
+         buildPermissions(['application:create']),
       );
       prismaMock.application.create.mockImplementation(
          ({
@@ -212,8 +204,8 @@ describe('Applications management', () => {
    });
 
    it('returns 403 when application:create permission is missing', async () => {
-      prismaMock.roleAssignment.findMany.mockResolvedValue(
-         buildRoleAssignments(['application:read']),
+      prismaMock.permission.findMany.mockResolvedValue(
+         buildPermissions(['application:read']),
       );
 
       const accessToken = await createAccessToken();
@@ -233,8 +225,8 @@ describe('Applications management', () => {
    });
 
    it('returns applications list for a user with application:read', async () => {
-      prismaMock.roleAssignment.findMany.mockResolvedValue(
-         buildRoleAssignments(['application:read']),
+      prismaMock.permission.findMany.mockResolvedValue(
+         buildPermissions(['application:read']),
       );
       prismaMock.application.findMany.mockResolvedValue([buildApplication()]);
 
@@ -264,8 +256,8 @@ describe('Applications management', () => {
    });
 
    it('returns 403 for list without application:read', async () => {
-      prismaMock.roleAssignment.findMany.mockResolvedValue(
-         buildRoleAssignments(['application:create']),
+      prismaMock.permission.findMany.mockResolvedValue(
+         buildPermissions(['application:create']),
       );
 
       const accessToken = await createAccessToken();
@@ -281,8 +273,8 @@ describe('Applications management', () => {
    });
 
    it('returns an application by id', async () => {
-      prismaMock.roleAssignment.findMany.mockResolvedValue(
-         buildRoleAssignments(['application:read']),
+      prismaMock.permission.findMany.mockResolvedValue(
+         buildPermissions(['application:read']),
       );
       prismaMock.application.findUnique.mockResolvedValue(buildApplication());
 
@@ -308,8 +300,8 @@ describe('Applications management', () => {
    });
 
    it('returns 404 for missing application on get', async () => {
-      prismaMock.roleAssignment.findMany.mockResolvedValue(
-         buildRoleAssignments(['application:read']),
+      prismaMock.permission.findMany.mockResolvedValue(
+         buildPermissions(['application:read']),
       );
       prismaMock.application.findUnique.mockResolvedValue(null);
 
@@ -331,8 +323,8 @@ describe('Applications management', () => {
    });
 
    it('updates title and description with application:update', async () => {
-      prismaMock.roleAssignment.findMany.mockResolvedValue(
-         buildRoleAssignments(['application:update']),
+      prismaMock.permission.findMany.mockResolvedValue(
+         buildPermissions(['application:update']),
       );
       prismaMock.application.findUnique.mockResolvedValue({ id: APPLICATION_ID });
       prismaMock.application.update.mockResolvedValue(
@@ -376,8 +368,8 @@ describe('Applications management', () => {
    });
 
    it('returns 403 for update without application:update', async () => {
-      prismaMock.roleAssignment.findMany.mockResolvedValue(
-         buildRoleAssignments(['application:read']),
+      prismaMock.permission.findMany.mockResolvedValue(
+         buildPermissions(['application:read']),
       );
 
       const accessToken = await createAccessToken();
@@ -396,8 +388,8 @@ describe('Applications management', () => {
    });
 
    it('returns 404 for missing application on update', async () => {
-      prismaMock.roleAssignment.findMany.mockResolvedValue(
-         buildRoleAssignments(['application:update']),
+      prismaMock.permission.findMany.mockResolvedValue(
+         buildPermissions(['application:update']),
       );
       prismaMock.application.findUnique.mockResolvedValue(null);
 
@@ -417,8 +409,8 @@ describe('Applications management', () => {
    });
 
    it('updates status separately with application:update_status', async () => {
-      prismaMock.roleAssignment.findMany.mockResolvedValue(
-         buildRoleAssignments(['application:update_status']),
+      prismaMock.permission.findMany.mockResolvedValue(
+         buildPermissions(['application:update_status']),
       );
       prismaMock.application.findUnique.mockResolvedValue({ id: APPLICATION_ID });
       prismaMock.application.update.mockResolvedValue(
@@ -457,8 +449,8 @@ describe('Applications management', () => {
    });
 
    it('returns 403 for status update without application:update_status', async () => {
-      prismaMock.roleAssignment.findMany.mockResolvedValue(
-         buildRoleAssignments(['application:update']),
+      prismaMock.permission.findMany.mockResolvedValue(
+         buildPermissions(['application:update']),
       );
 
       const accessToken = await createAccessToken();
@@ -477,8 +469,8 @@ describe('Applications management', () => {
    });
 
    it('returns 404 for missing application on status update', async () => {
-      prismaMock.roleAssignment.findMany.mockResolvedValue(
-         buildRoleAssignments(['application:update_status']),
+      prismaMock.permission.findMany.mockResolvedValue(
+         buildPermissions(['application:update_status']),
       );
       prismaMock.application.findUnique.mockResolvedValue(null);
 
@@ -498,8 +490,8 @@ describe('Applications management', () => {
    });
 
    it('deletes an application with application:delete', async () => {
-      prismaMock.roleAssignment.findMany.mockResolvedValue(
-         buildRoleAssignments(['application:delete']),
+      prismaMock.permission.findMany.mockResolvedValue(
+         buildPermissions(['application:delete']),
       );
       prismaMock.application.findUnique.mockResolvedValue({ id: APPLICATION_ID });
       prismaMock.application.delete.mockResolvedValue(buildApplication());
@@ -521,8 +513,8 @@ describe('Applications management', () => {
    });
 
    it('returns 403 for delete without application:delete', async () => {
-      prismaMock.roleAssignment.findMany.mockResolvedValue(
-         buildRoleAssignments(['application:read']),
+      prismaMock.permission.findMany.mockResolvedValue(
+         buildPermissions(['application:read']),
       );
 
       const accessToken = await createAccessToken();
@@ -538,8 +530,8 @@ describe('Applications management', () => {
    });
 
    it('returns 404 for missing application on delete', async () => {
-      prismaMock.roleAssignment.findMany.mockResolvedValue(
-         buildRoleAssignments(['application:delete']),
+      prismaMock.permission.findMany.mockResolvedValue(
+         buildPermissions(['application:delete']),
       );
       prismaMock.application.findUnique.mockResolvedValue(null);
 

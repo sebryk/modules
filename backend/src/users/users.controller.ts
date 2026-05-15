@@ -5,6 +5,7 @@ import {
    Get,
    Param,
    ParseUUIDPipe,
+   Put,
    Post,
    Query,
    Req,
@@ -13,6 +14,7 @@ import type { AuthenticatedRequest } from '../common/types/api';
 
 import { RequirePermission } from '../auth/decorators/require-permission.decorator';
 import { CreateUserDto } from './dto/create-user.dto';
+import { ReplaceUserRolesDto } from '../rbac/dto/replace-user-roles.dto';
 import { UsersService } from './users.service';
 import type { User } from './users.types';
 
@@ -60,5 +62,21 @@ export class UsersController {
       @Param('id', new ParseUUIDPipe()) id: string,
    ): Promise<void> {
       await this.usersService.deleteUser(id);
+   }
+
+   @Put(':id/roles')
+   @RequirePermission('role:assign')
+   public async replaceRoles(
+      @Param('id', new ParseUUIDPipe()) id: string,
+      @Body() replaceUserRolesDto: ReplaceUserRolesDto,
+      @Req() request: AuthenticatedRequest,
+   ): Promise<{ data: User }> {
+      const user = await this.usersService.replaceUserRoles(
+         id,
+         request.user.id,
+         replaceUserRolesDto,
+      );
+
+      return { data: user };
    }
 }

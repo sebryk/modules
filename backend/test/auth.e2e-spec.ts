@@ -14,13 +14,23 @@ const buildPrismaMock = () => ({
    application: {
       findMany: jest.fn(),
    },
+   permission: {
+      findMany: jest.fn(),
+   },
    user: {
       findUnique: jest.fn(),
    },
-   roleAssignment: {
-      findMany: jest.fn(),
-   },
 });
+
+const buildPermissions = (permissions: string[]) =>
+   permissions.map((permission) => {
+      const [resource, action] = permission.split(':');
+
+      return {
+         resource,
+         action,
+      };
+   });
 
 const isAccessTokenResponse = (
    value: unknown,
@@ -151,26 +161,9 @@ describe('Auth RBAC', () => {
             return null;
          },
       );
-      prismaMock.roleAssignment.findMany.mockResolvedValue([
-         {
-            role: {
-               rolePermissions: [
-                  {
-                     permission: {
-                        resource: 'application',
-                        action: 'create',
-                     },
-                  },
-                  {
-                     permission: {
-                        resource: 'application',
-                        action: 'read',
-                     },
-                  },
-               ],
-            },
-         },
-      ]);
+      prismaMock.permission.findMany.mockResolvedValue(
+         buildPermissions(['application:create', 'application:read']),
+      );
 
       const accessToken = await jwtService.signAsync(
          { sub: 'user-1' },
@@ -190,14 +183,12 @@ describe('Auth RBAC', () => {
 
       expect(response.statusCode).toBe(200);
       expect(response.json()).toEqual({
-         user: {
-            id: 'user-1',
-            email: 'admin@example.com',
-            firstName: 'System',
-            lastName: 'Administrator',
-            position: 'Administrator',
-            createdAt: '2024-01-01T00:00:00.000Z',
-         },
+         id: 'user-1',
+         email: 'admin@example.com',
+         firstName: 'System',
+         lastName: 'Administrator',
+         position: 'Administrator',
+         createdAt: '2024-01-01T00:00:00.000Z',
          permissions: ['application:create', 'application:read'],
       });
    });
@@ -212,7 +203,7 @@ describe('Auth RBAC', () => {
    });
 
    it('returns 403 when permission is missing', async () => {
-      prismaMock.roleAssignment.findMany.mockResolvedValue([]);
+      prismaMock.permission.findMany.mockResolvedValue([]);
 
       const accessToken = await jwtService.signAsync(
          { sub: 'user-1' },
@@ -234,20 +225,9 @@ describe('Auth RBAC', () => {
    });
 
    it('allows protected endpoint when permission exists', async () => {
-      prismaMock.roleAssignment.findMany.mockResolvedValue([
-         {
-            role: {
-               rolePermissions: [
-                  {
-                     permission: {
-                        resource: 'application',
-                        action: 'read',
-                     },
-                  },
-               ],
-            },
-         },
-      ]);
+      prismaMock.permission.findMany.mockResolvedValue(
+         buildPermissions(['application:read']),
+      );
       prismaMock.application.findMany.mockResolvedValue([
          {
             id: 'application-1',
