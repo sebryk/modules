@@ -13,6 +13,7 @@ import { ReplaceUserRolesDto } from '../rbac/dto/replace-user-roles.dto';
 import { baseRoleSelect } from '../rbac/rbac.select';
 import type { Role } from '../rbac/rbac.types';
 import type { CreateUserDto } from './dto/create-user.dto';
+import type { UpdateUserDto } from './dto/update-user.dto';
 import type { User } from './users.types';
 import { roleAssignmentsSelect, userWithRolesSelect } from './users.select';
 
@@ -207,6 +208,119 @@ export class UsersService {
             })),
          });
       });
+
+      const user = await this.prismaService.user.findUnique({
+         where: {
+            id: userId,
+         },
+         select: {
+            ...userWithRolesSelect,
+            ...roleAssignmentsSelect,
+         },
+      });
+
+      if (!user) {
+         throw new NotFoundException(`User with id ${userId} not found`);
+      }
+
+      return user;
+   }
+
+   public async updateUser(
+      userId: string,
+      grantedBy: string,
+      updateUserDto: UpdateUserDto,
+   ): Promise<User> {
+      const existingUser = await this.prismaService.user.findUnique({
+         where: {
+            id: userId,
+         },
+         select: {
+            id: true,
+         },
+      });
+
+      if (!existingUser) {
+         throw new NotFoundException(`User with id ${userId} not found`);
+      }
+
+      if (updateUserDto.roleIds.length === 0) {
+         throw new BadRequestException('At least one role is required');
+      }
+
+      const roles = await this.prismaService.role.findMany({
+         where: {
+            id: {
+               in: updateUserDto.roleIds,
+            },
+         },
+         select: baseRoleSelect,
+      });
+
+      if (roles.length !== updateUserDto.roleIds.length) {
+         throw new BadRequestException('One or more roles do not exist');
+      }
+
+      const roleById = new Map<string, Role>(
+         roles.map((role) => [role.id, role]),
+      );
+      const orderedRoles = updateUserDto.roleIds.map((roleId) => {
+         const role = roleById.get(roleId);
+
+         if (!role) {
+            throw new BadRequestException('One or more roles do not exist');
+         }
+
+         return role;
+      });
+      const passwordHash = await argon2.hash(
+         updateUserDto.password,
+         PASSWORD_HASH_OPTIONS,
+      );
+
+      try {
+         await this.prismaService.$transaction(async (tx) => {
+            await tx.user.update({
+               where: {
+                  id: userId,
+               },
+               data: {
+                  email: updateUserDto.email,
+                  firstName: updateUserDto.firstName,
+                  lastName: updateUserDto.lastName,
+                  position: updateUserDto.position,
+                  passwordHash,
+               },
+               select: {
+                  id: true,
+               },
+            });
+
+            await tx.roleAssignment.deleteMany({
+               where: {
+                  userId,
+               },
+            });
+
+            await tx.roleAssignment.createMany({
+               data: orderedRoles.map((role) => ({
+                  userId,
+                  roleId: role.id,
+                  grantedBy,
+               })),
+            });
+         });
+      } catch (error) {
+         if (isPrismaErrorCode(error, 'P2002')) {
+            throw new ConflictException('User with this email already exists');
+         }
+
+         if (isPrismaErrorCode(error, 'P2025')) {
+            throw new NotFoundException(`User with id ${userId} not found`);
+         }
+
+         throw error;
+      }
 
       const user = await this.prismaService.user.findUnique({
          where: {

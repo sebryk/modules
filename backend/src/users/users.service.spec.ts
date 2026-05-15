@@ -211,4 +211,138 @@ describe('UsersService', () => {
          }),
       ).rejects.toBeInstanceOf(BadRequestException);
    });
+
+   it('updates a user and replaces their roles', async () => {
+      const transactionContext = {
+         user: {
+            update: jest.fn().mockResolvedValue({
+               id: 'user-1',
+            }),
+         },
+         roleAssignment: {
+            createMany: jest.fn().mockResolvedValue({ count: 1 }),
+            deleteMany: jest.fn().mockResolvedValue({ count: 1 }),
+         },
+      };
+      const prismaService = {
+         user: {
+            findMany: jest.fn(),
+            findUnique: jest
+               .fn()
+               .mockResolvedValueOnce({
+                  id: 'user-1',
+               })
+               .mockResolvedValueOnce({
+                  id: 'user-1',
+                  email: 'updated.user@example.com',
+                  firstName: 'Updated',
+                  lastName: 'User',
+                  position: 'Director',
+                  createdAt: new Date('2024-01-01T00:00:00.000Z'),
+                  roleAssignments: [
+                     {
+                        grantedBy: 'admin-1',
+                        createdAt: new Date('2024-01-03T00:00:00.000Z'),
+                        role: {
+                           id: 'role-2',
+                           name: 'support',
+                           description: 'Can support users',
+                           isSystem: false,
+                        },
+                     },
+                  ],
+               }),
+         },
+         role: {
+            findMany: jest.fn().mockResolvedValue([
+               {
+                  id: 'role-2',
+                  name: 'support',
+                  description: 'Can support users',
+                  isSystem: false,
+               },
+            ]),
+         },
+         roleAssignment: transactionContext.roleAssignment,
+         $transaction: jest.fn().mockImplementation(
+            <
+               TValue,
+            >(
+               callback: (
+                  tx: typeof transactionContext,
+               ) => Promise<TValue>,
+            ) => callback(transactionContext),
+         ),
+      };
+
+      const usersService = new UsersService(prismaService as never);
+
+      await expect(
+         usersService.updateUser('user-1', 'admin-1', {
+            email: 'updated.user@example.com',
+            password: 'UpdatedPass123!',
+            firstName: 'Updated',
+            lastName: 'User',
+            position: 'Director',
+            roleIds: ['role-2'],
+         }),
+      ).resolves.toEqual({
+         id: 'user-1',
+         email: 'updated.user@example.com',
+         firstName: 'Updated',
+         lastName: 'User',
+         position: 'Director',
+         createdAt: new Date('2024-01-01T00:00:00.000Z'),
+         roleAssignments: [
+            {
+               grantedBy: 'admin-1',
+               createdAt: new Date('2024-01-03T00:00:00.000Z'),
+               role: {
+                  id: 'role-2',
+                  name: 'support',
+                  description: 'Can support users',
+                  isSystem: false,
+               },
+            },
+         ],
+      });
+      expect(transactionContext.user.update).toHaveBeenCalledTimes(1);
+      const [updateArgs] = transactionContext.user.update.mock.calls[0] as [
+         {
+            where: { id: string };
+            data: {
+               email: string;
+               firstName: string;
+               lastName: string;
+               position: string;
+               passwordHash: string;
+            };
+            select: { id: boolean };
+         },
+      ];
+      expect(updateArgs.where).toEqual({
+         id: 'user-1',
+      });
+      expect(updateArgs.data.email).toBe('updated.user@example.com');
+      expect(updateArgs.data.firstName).toBe('Updated');
+      expect(updateArgs.data.lastName).toBe('User');
+      expect(updateArgs.data.position).toBe('Director');
+      expect(typeof updateArgs.data.passwordHash).toBe('string');
+      expect(updateArgs.data.passwordHash).not.toBe('UpdatedPass123!');
+      expect(updateArgs.select).toEqual({
+         id: true,
+      });
+      expect(transactionContext.roleAssignment.deleteMany).toHaveBeenCalledWith({
+         where: { userId: 'user-1' },
+      });
+      expect(transactionContext.roleAssignment.createMany).toHaveBeenCalledWith({
+         data: [
+            {
+               userId: 'user-1',
+               roleId: 'role-2',
+               grantedBy: 'admin-1',
+            },
+         ],
+      });
+   });
 });

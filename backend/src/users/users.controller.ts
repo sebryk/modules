@@ -14,6 +14,7 @@ import type { AuthenticatedRequest } from '../common/types/api';
 
 import { RequirePermission } from '../auth/decorators/require-permission.decorator';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { ReplaceUserRolesDto } from '../rbac/dto/replace-user-roles.dto';
 import { UsersService } from './users.service';
 import type { User } from './users.types';
@@ -52,6 +53,21 @@ export class UsersController {
       const user = await this.usersService.createUser(
          request.user.id,
          createUserDto,
+      );
+      return { data: user };
+   }
+
+   @Put(':id')
+   @RequirePermission('user:update')
+   public async update(
+      @Param('id', new ParseUUIDPipe()) id: string,
+      @Body() updateUserDto: UpdateUserDto,
+      @Req() request: AuthenticatedRequest,
+   ): Promise<{ data: User }> {
+      const user = await this.usersService.updateUser(
+         id,
+         request.user.id,
+         updateUserDto,
       );
       return { data: user };
    }

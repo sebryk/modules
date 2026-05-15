@@ -19,6 +19,7 @@ const buildPrismaMock = () => ({
    user: {
       findUnique: jest.fn(),
       create: jest.fn(),
+      update: jest.fn(),
    },
    role: {
       findMany: jest.fn(),
@@ -336,6 +337,155 @@ describe('Users management', () => {
          error: 'Bad Request',
          statusCode: 400,
       });
+   });
+
+   it('updates a user with all mutable fields', async () => {
+      prismaMock.permission.findMany.mockResolvedValue(
+         buildPermissions(['user:update']),
+      );
+      prismaMock.user.findUnique
+         .mockResolvedValueOnce({
+            id: TARGET_USER_ID,
+         })
+         .mockResolvedValueOnce({
+            id: TARGET_USER_ID,
+            email: 'updated.user@example.com',
+            firstName: 'Updated',
+            lastName: 'User',
+            position: 'Director',
+            createdAt: new Date('2024-01-01T00:00:00.000Z'),
+            roleAssignments: [
+               {
+                  grantedBy: ADMIN_ID,
+                  createdAt: new Date('2024-01-05T00:00:00.000Z'),
+                  role: {
+                     id: SUPPORT_ROLE_ID,
+                     name: 'support',
+                     description: 'Can support users',
+                     isSystem: false,
+                  },
+               },
+            ],
+         });
+      prismaMock.role.findMany.mockResolvedValue([
+         {
+            id: SUPPORT_ROLE_ID,
+            name: 'support',
+            description: 'Can support users',
+            isSystem: false,
+         },
+      ]);
+      prismaMock.user.update.mockResolvedValue({
+         id: TARGET_USER_ID,
+      });
+      prismaMock.roleAssignment.deleteMany.mockResolvedValue({ count: 1 });
+      prismaMock.roleAssignment.createMany.mockResolvedValue({ count: 1 });
+
+      const accessToken = await createAccessToken();
+      const response = await app.inject({
+         method: 'PUT',
+         url: `/users/${TARGET_USER_ID}`,
+         headers: {
+            authorization: `Bearer ${accessToken}`,
+         },
+         payload: {
+            email: 'updated.user@example.com',
+            password: 'UpdatedPass123!',
+            firstName: 'Updated',
+            lastName: 'User',
+            position: 'Director',
+            roleIds: [SUPPORT_ROLE_ID],
+         },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(JSON.parse(response.body)).toEqual({
+         data: {
+            id: TARGET_USER_ID,
+            email: 'updated.user@example.com',
+            firstName: 'Updated',
+            lastName: 'User',
+            position: 'Director',
+            createdAt: '2024-01-01T00:00:00.000Z',
+            roleAssignments: [
+               {
+                  grantedBy: ADMIN_ID,
+                  createdAt: '2024-01-05T00:00:00.000Z',
+                  role: {
+                     id: SUPPORT_ROLE_ID,
+                     name: 'support',
+                     description: 'Can support users',
+                     isSystem: false,
+                  },
+               },
+            ],
+         },
+      });
+      expect(prismaMock.user.update).toHaveBeenCalledTimes(1);
+      const [updateArgs] = prismaMock.user.update.mock.calls[0] as [
+         {
+            where: { id: string };
+            data: {
+               email: string;
+               firstName: string;
+               lastName: string;
+               position: string;
+               passwordHash: string;
+            };
+            select: { id: boolean };
+         },
+      ];
+      expect(updateArgs.where).toEqual({
+         id: TARGET_USER_ID,
+      });
+      expect(updateArgs.data.email).toBe('updated.user@example.com');
+      expect(updateArgs.data.firstName).toBe('Updated');
+      expect(updateArgs.data.lastName).toBe('User');
+      expect(updateArgs.data.position).toBe('Director');
+      expect(typeof updateArgs.data.passwordHash).toBe('string');
+      expect(updateArgs.data.passwordHash).not.toBe('UpdatedPass123!');
+      expect(updateArgs.select).toEqual({
+         id: true,
+      });
+      expect(prismaMock.roleAssignment.deleteMany).toHaveBeenCalledWith({
+         where: {
+            userId: TARGET_USER_ID,
+         },
+      });
+      expect(prismaMock.roleAssignment.createMany).toHaveBeenCalledWith({
+         data: [
+            {
+               userId: TARGET_USER_ID,
+               roleId: SUPPORT_ROLE_ID,
+               grantedBy: ADMIN_ID,
+            },
+         ],
+      });
+   });
+
+   it('returns 403 when user:update permission is missing', async () => {
+      prismaMock.permission.findMany.mockResolvedValue(
+         buildPermissions(['user:read']),
+      );
+
+      const accessToken = await createAccessToken();
+      const response = await app.inject({
+         method: 'PUT',
+         url: `/users/${TARGET_USER_ID}`,
+         headers: {
+            authorization: `Bearer ${accessToken}`,
+         },
+         payload: {
+            email: 'updated.user@example.com',
+            password: 'UpdatedPass123!',
+            firstName: 'Updated',
+            lastName: 'User',
+            position: 'Director',
+            roleIds: [SUPPORT_ROLE_ID],
+         },
+      });
+
+      expect(response.statusCode).toBe(403);
    });
 
    it('returns roles for a user with role:read permission', async () => {
