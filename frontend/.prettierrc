@@ -1,11 +1,13 @@
 {
-  "endOfLine": "lf",
-  "semi": false,
-  "singleQuote": false,
-  "tabWidth": 3,
-  "trailingComma": "es5",
-  "printWidth": 80,
-  "plugins": ["prettier-plugin-tailwindcss"],
-  "tailwindStylesheet": "src/app/styles/index.css",
-  "tailwindFunctions": ["cn", "cva"]
+   "endOfLine": "lf",
+   "singleQuote": true,
+   "tabWidth": 3,
+   "bracketSpacing": true,
+   "semi": false,
+   "trailingComma": "all",
+   "arrowParens": "always",
+   "printWidth": 100,
+   "plugins": ["prettier-plugin-tailwindcss"],
+   "tailwindStylesheet": "src/app/styles/index.css",
+   "tailwindFunctions": ["cn", "cva"]
 }
