@@ -1,10 +1,10 @@
-import { useEffect } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
 
-import { authQueryKeys } from "@/shared/api/query-keys"
-import { refreshAccessTokenRequest } from "@/shared/api/auth"
+import { authQueryKeys } from '@/shared/api/query-keys'
+import { refreshAccessTokenRequest } from '@/shared/api/auth'
 
-import { clearSession, setAccessToken } from "./session"
+import { clearSession, setAccessToken } from './session'
 
 const useBootstrapSession = () => {
    const query = useQuery({

@@ -1,14 +1,14 @@
-import type { BaseUser } from '../common/types/user';
-import type { Role } from '../rbac/rbac.types';
+import type { BaseUser } from '../common/types/user'
+import type { Role } from '../rbac/rbac.types'
 
 export type User =
    | BaseUser
    | {
-        roleAssignments: UserRoleAssignment[];
-     };
+        roleAssignments: UserRoleAssignment[]
+     }
 
 export type UserRoleAssignment = {
-   role: Role;
-   grantedBy: string | null;
-   createdAt: Date;
-};
+   role: Role
+   grantedBy: string | null
+   createdAt: Date
+}

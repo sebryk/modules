@@ -1,13 +1,13 @@
-import { NavLink } from "react-router"
+import { NavLink } from 'react-router'
 
-import type { AppRouteItem } from "@/shared/config/navigation"
+import type { AppRouteItem } from '@/shared/config/navigation'
 import {
    SidebarGroup,
    SidebarGroupContent,
    SidebarMenu,
    SidebarMenuButton,
    SidebarMenuItem,
-} from "@/shared/ui/sidebar"
+} from '@/shared/ui/sidebar'
 
 type NavMainProps = {
    items: AppRouteItem[]
@@ -25,11 +25,7 @@ export function NavMain({ items }: NavMainProps) {
                      <SidebarMenuItem key={item.title}>
                         <NavLink to={item.to} end={item.end}>
                            {({ isActive }) => (
-                              <SidebarMenuButton
-                                 asChild
-                                 isActive={isActive}
-                                 tooltip={item.title}
-                              >
+                              <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
                                  <span>
                                     <Icon />
                                     <span>{item.title}</span>

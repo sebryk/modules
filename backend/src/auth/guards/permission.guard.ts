@@ -1,14 +1,9 @@
-import {
-   CanActivate,
-   ExecutionContext,
-   ForbiddenException,
-   Injectable,
-} from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common'
+import { Reflector } from '@nestjs/core'
 
-import { AuthenticatedRequest } from '../../common/types/api';
-import { PermissionsService } from '../../rbac/permissions.service';
-import { PERMISSION_KEY } from '../auth.constants';
+import { AuthenticatedRequest } from '../../common/types/api'
+import { PermissionsService } from '../../rbac/permissions.service'
+import { PERMISSION_KEY } from '../auth.constants'
 
 @Injectable()
 export class PermissionGuard implements CanActivate {
@@ -18,29 +13,28 @@ export class PermissionGuard implements CanActivate {
    ) {}
 
    public async canActivate(context: ExecutionContext): Promise<boolean> {
-      const permission = this.reflector.getAllAndOverride<string | undefined>(
-         PERMISSION_KEY,
-         [context.getHandler(), context.getClass()],
-      );
+      const permission = this.reflector.getAllAndOverride<string | undefined>(PERMISSION_KEY, [
+         context.getHandler(),
+         context.getClass(),
+      ])
 
       if (!permission) {
-         return true;
+         return true
       }
 
-      const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
-      const userId = request.user?.id;
+      const request = context.switchToHttp().getRequest<AuthenticatedRequest>()
+      const userId = request.user?.id
 
       if (!userId) {
-         throw new ForbiddenException('Permission denied');
+         throw new ForbiddenException('Permission denied')
       }
 
-      const userPermissions =
-         await this.permissionsService.getUserPermissions(userId);
+      const userPermissions = await this.permissionsService.getUserPermissions(userId)
 
       if (!userPermissions.has(permission)) {
-         throw new ForbiddenException('Permission denied');
+         throw new ForbiddenException('Permission denied')
       }
 
-      return true;
+      return true
    }
 }

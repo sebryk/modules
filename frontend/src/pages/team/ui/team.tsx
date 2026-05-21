@@ -1,10 +1,4 @@
-import {
-   Card,
-   CardContent,
-   CardDescription,
-   CardHeader,
-   CardTitle,
-} from "@/shared/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
 
 const TeamPage = () => {
    return (
@@ -13,8 +7,7 @@ const TeamPage = () => {
             <CardHeader className="gap-3">
                <CardTitle>Team</CardTitle>
                <CardDescription>
-                  Team management will live here once the user list API is
-                  ready.
+                  Team management will live here once the user list API is ready.
                </CardDescription>
             </CardHeader>
             <CardContent>

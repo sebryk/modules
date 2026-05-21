@@ -1,17 +1,17 @@
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '@prisma/client'
 
 export const permissionSelect = {
    id: true,
    resource: true,
    action: true,
-} satisfies Prisma.PermissionSelect;
+} satisfies Prisma.PermissionSelect
 
 export const baseRoleSelect = {
    id: true,
    name: true,
    description: true,
    isSystem: true,
-} satisfies Prisma.RoleSelect;
+} satisfies Prisma.RoleSelect
 
 export const rolePermissionsSelect = {
    rolePermissions: {
@@ -33,4 +33,4 @@ export const rolePermissionsSelect = {
          },
       ],
    },
-} satisfies Prisma.RoleSelect;
+} satisfies Prisma.RoleSelect

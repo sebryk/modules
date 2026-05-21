@@ -3,19 +3,19 @@ import {
    ConflictException,
    Injectable,
    NotFoundException,
-} from '@nestjs/common';
-import * as argon2 from 'argon2';
+} from '@nestjs/common'
+import * as argon2 from 'argon2'
 
-import { PASSWORD_HASH_OPTIONS } from '../auth/auth.constants';
-import { isPrismaErrorCode } from '../prisma/prisma-errors';
-import { PrismaService } from '../prisma/prisma.service';
-import { ReplaceUserRolesDto } from '../rbac/dto/replace-user-roles.dto';
-import { baseRoleSelect } from '../rbac/rbac.select';
-import type { Role } from '../rbac/rbac.types';
-import type { CreateUserDto } from './dto/create-user.dto';
-import type { UpdateUserDto } from './dto/update-user.dto';
-import type { User } from './users.types';
-import { roleAssignmentsSelect, userWithRolesSelect } from './users.select';
+import { PASSWORD_HASH_OPTIONS } from '../auth/auth.constants'
+import { isPrismaErrorCode } from '../prisma/prisma-errors'
+import { PrismaService } from '../prisma/prisma.service'
+import { ReplaceUserRolesDto } from '../rbac/dto/replace-user-roles.dto'
+import { baseRoleSelect } from '../rbac/rbac.select'
+import type { Role } from '../rbac/rbac.types'
+import type { CreateUserDto } from './dto/create-user.dto'
+import type { UpdateUserDto } from './dto/update-user.dto'
+import type { User } from './users.types'
+import { roleAssignmentsSelect, userWithRolesSelect } from './users.select'
 
 @Injectable()
 export class UsersService {
@@ -30,9 +30,9 @@ export class UsersService {
          orderBy: {
             createdAt: 'desc',
          },
-      });
+      })
 
-      return users;
+      return users
    }
 
    public async findById(id: string): Promise<User> {
@@ -41,21 +41,18 @@ export class UsersService {
             id,
          },
          select: userWithRolesSelect,
-      });
+      })
 
       if (!user) {
-         throw new NotFoundException(`User with id ${id} not found`);
+         throw new NotFoundException(`User with id ${id} not found`)
       }
 
-      return user;
+      return user
    }
 
-   public async createUser(
-      grantedBy: string,
-      createUserDto: CreateUserDto,
-   ): Promise<User> {
+   public async createUser(grantedBy: string, createUserDto: CreateUserDto): Promise<User> {
       if (createUserDto.roleIds.length === 0) {
-         throw new BadRequestException('At least one role is required');
+         throw new BadRequestException('At least one role is required')
       }
 
       const existingUser = await this.prismaService.user.findUnique({
@@ -65,10 +62,10 @@ export class UsersService {
          select: {
             id: true,
          },
-      });
+      })
 
       if (existingUser) {
-         throw new ConflictException('User with this email already exists');
+         throw new ConflictException('User with this email already exists')
       }
 
       const roles = await this.prismaService.role.findMany({
@@ -78,28 +75,23 @@ export class UsersService {
             },
          },
          select: baseRoleSelect,
-      });
+      })
 
       if (roles.length !== createUserDto.roleIds.length) {
-         throw new BadRequestException('One or more roles do not exist');
+         throw new BadRequestException('One or more roles do not exist')
       }
 
-      const roleById = new Map<string, Role>(
-         roles.map((role) => [role.id, role]),
-      );
+      const roleById = new Map<string, Role>(roles.map((role) => [role.id, role]))
       const orderedRoles = createUserDto.roleIds.map((roleId) => {
-         const role = roleById.get(roleId);
+         const role = roleById.get(roleId)
 
          if (!role) {
-            throw new BadRequestException('One or more roles do not exist');
+            throw new BadRequestException('One or more roles do not exist')
          }
 
-         return role;
-      });
-      const passwordHash = await argon2.hash(
-         createUserDto.password,
-         PASSWORD_HASH_OPTIONS,
-      );
+         return role
+      })
+      const passwordHash = await argon2.hash(createUserDto.password, PASSWORD_HASH_OPTIONS)
 
       try {
          const user = await this.prismaService.$transaction(async (tx) => {
@@ -119,7 +111,7 @@ export class UsersService {
                   position: true,
                   createdAt: true,
                },
-            });
+            })
 
             await tx.roleAssignment.createMany({
                data: orderedRoles.map((role) => ({
@@ -127,10 +119,10 @@ export class UsersService {
                   roleId: role.id,
                   grantedBy,
                })),
-            });
+            })
 
-            return createdUser;
-         });
+            return createdUser
+         })
 
          return {
             ...user,
@@ -139,13 +131,13 @@ export class UsersService {
                grantedBy,
                createdAt: user.createdAt,
             })),
-         };
+         }
       } catch (error) {
          if (isPrismaErrorCode(error, 'P2002')) {
-            throw new ConflictException('User with this email already exists');
+            throw new ConflictException('User with this email already exists')
          }
 
-         throw error;
+         throw error
       }
    }
 
@@ -161,10 +153,10 @@ export class UsersService {
          select: {
             id: true,
          },
-      });
+      })
 
       if (!existingUser) {
-         throw new NotFoundException(`User with id ${userId} not found`);
+         throw new NotFoundException(`User with id ${userId} not found`)
       }
 
       const roles = await this.prismaService.role.findMany({
@@ -174,31 +166,29 @@ export class UsersService {
             },
          },
          select: baseRoleSelect,
-      });
+      })
 
       if (roles.length !== replaceUserRolesDto.roleIds.length) {
-         throw new BadRequestException('One or more roles do not exist');
+         throw new BadRequestException('One or more roles do not exist')
       }
 
-      const roleById = new Map<string, Role>(
-         roles.map((role) => [role.id, role]),
-      );
+      const roleById = new Map<string, Role>(roles.map((role) => [role.id, role]))
       const orderedRoles = replaceUserRolesDto.roleIds.map((roleId) => {
-         const role = roleById.get(roleId);
+         const role = roleById.get(roleId)
 
          if (!role) {
-            throw new BadRequestException('One or more roles do not exist');
+            throw new BadRequestException('One or more roles do not exist')
          }
 
-         return role;
-      });
+         return role
+      })
 
       await this.prismaService.$transaction(async (tx) => {
          await tx.roleAssignment.deleteMany({
             where: {
                userId,
             },
-         });
+         })
 
          await tx.roleAssignment.createMany({
             data: orderedRoles.map((role) => ({
@@ -206,8 +196,8 @@ export class UsersService {
                roleId: role.id,
                grantedBy,
             })),
-         });
-      });
+         })
+      })
 
       const user = await this.prismaService.user.findUnique({
          where: {
@@ -217,13 +207,13 @@ export class UsersService {
             ...userWithRolesSelect,
             ...roleAssignmentsSelect,
          },
-      });
+      })
 
       if (!user) {
-         throw new NotFoundException(`User with id ${userId} not found`);
+         throw new NotFoundException(`User with id ${userId} not found`)
       }
 
-      return user;
+      return user
    }
 
    public async updateUser(
@@ -238,14 +228,14 @@ export class UsersService {
          select: {
             id: true,
          },
-      });
+      })
 
       if (!existingUser) {
-         throw new NotFoundException(`User with id ${userId} not found`);
+         throw new NotFoundException(`User with id ${userId} not found`)
       }
 
       if (updateUserDto.roleIds.length === 0) {
-         throw new BadRequestException('At least one role is required');
+         throw new BadRequestException('At least one role is required')
       }
 
       const roles = await this.prismaService.role.findMany({
@@ -255,28 +245,23 @@ export class UsersService {
             },
          },
          select: baseRoleSelect,
-      });
+      })
 
       if (roles.length !== updateUserDto.roleIds.length) {
-         throw new BadRequestException('One or more roles do not exist');
+         throw new BadRequestException('One or more roles do not exist')
       }
 
-      const roleById = new Map<string, Role>(
-         roles.map((role) => [role.id, role]),
-      );
+      const roleById = new Map<string, Role>(roles.map((role) => [role.id, role]))
       const orderedRoles = updateUserDto.roleIds.map((roleId) => {
-         const role = roleById.get(roleId);
+         const role = roleById.get(roleId)
 
          if (!role) {
-            throw new BadRequestException('One or more roles do not exist');
+            throw new BadRequestException('One or more roles do not exist')
          }
 
-         return role;
-      });
-      const passwordHash = await argon2.hash(
-         updateUserDto.password,
-         PASSWORD_HASH_OPTIONS,
-      );
+         return role
+      })
+      const passwordHash = await argon2.hash(updateUserDto.password, PASSWORD_HASH_OPTIONS)
 
       try {
          await this.prismaService.$transaction(async (tx) => {
@@ -294,13 +279,13 @@ export class UsersService {
                select: {
                   id: true,
                },
-            });
+            })
 
             await tx.roleAssignment.deleteMany({
                where: {
                   userId,
                },
-            });
+            })
 
             await tx.roleAssignment.createMany({
                data: orderedRoles.map((role) => ({
@@ -308,18 +293,18 @@ export class UsersService {
                   roleId: role.id,
                   grantedBy,
                })),
-            });
-         });
+            })
+         })
       } catch (error) {
          if (isPrismaErrorCode(error, 'P2002')) {
-            throw new ConflictException('User with this email already exists');
+            throw new ConflictException('User with this email already exists')
          }
 
          if (isPrismaErrorCode(error, 'P2025')) {
-            throw new NotFoundException(`User with id ${userId} not found`);
+            throw new NotFoundException(`User with id ${userId} not found`)
          }
 
-         throw error;
+         throw error
       }
 
       const user = await this.prismaService.user.findUnique({
@@ -330,25 +315,25 @@ export class UsersService {
             ...userWithRolesSelect,
             ...roleAssignmentsSelect,
          },
-      });
+      })
 
       if (!user) {
-         throw new NotFoundException(`User with id ${userId} not found`);
+         throw new NotFoundException(`User with id ${userId} not found`)
       }
 
-      return user;
+      return user
    }
 
    public async deleteUser(id: string): Promise<void> {
       try {
          await this.prismaService.user.delete({
             where: { id },
-         });
+         })
       } catch (error) {
          if (isPrismaErrorCode(error, 'P2025')) {
-            throw new NotFoundException(`User with id ${id} not found`);
+            throw new NotFoundException(`User with id ${id} not found`)
          }
-         throw error;
+         throw error
       }
    }
 }

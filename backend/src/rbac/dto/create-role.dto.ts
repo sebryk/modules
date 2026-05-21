@@ -6,24 +6,24 @@ import {
    IsString,
    IsUUID,
    MaxLength,
-} from 'class-validator';
+} from 'class-validator'
 
 export class CreateRoleDto {
    @IsString()
    @MaxLength(255)
-   public name!: string;
+   public name!: string
 
    @IsOptional()
    @IsString()
    @MaxLength(255)
-   public description?: string | null;
+   public description?: string | null
 
    @IsArray()
    @ArrayUnique()
    @IsUUID('4', { each: true })
-   public permissionIds!: string[];
+   public permissionIds!: string[]
 
    @IsOptional()
    @IsBoolean()
-   public isSystem?: boolean;
+   public isSystem?: boolean
 }

@@ -8,37 +8,37 @@ import {
    IsUUID,
    MaxLength,
    MinLength,
-} from 'class-validator';
+} from 'class-validator'
 
 export class CreateUserDto {
    @IsNotEmpty()
    @IsEmail()
    @MaxLength(255)
-   public email!: string;
+   public email!: string
 
    @IsNotEmpty()
    @IsString()
    @MinLength(8)
-   public password!: string;
+   public password!: string
 
    @IsNotEmpty()
    @IsString()
    @MaxLength(255)
-   public firstName!: string;
+   public firstName!: string
 
    @IsNotEmpty()
    @IsString()
    @MaxLength(255)
-   public lastName!: string;
+   public lastName!: string
 
    @IsNotEmpty()
    @IsString()
    @MaxLength(255)
-   public position!: string;
+   public position!: string
 
    @IsArray()
    @ArrayNotEmpty()
    @ArrayUnique()
    @IsUUID('4', { each: true })
-   public roleIds!: string[];
+   public roleIds!: string[]
 }

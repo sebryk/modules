@@ -1,9 +1,9 @@
-import { useQuery } from "@tanstack/react-query"
+import { useQuery } from '@tanstack/react-query'
 
-import { useSessionStore } from "@/entities/session"
-import { userQueryKeys } from "@/shared/api/query-keys"
+import { useSessionStore } from '@/entities/session'
+import { userQueryKeys } from '@/shared/api/query-keys'
 
-import { getMeRequest } from "../api/get-me"
+import { getMeRequest } from '../api/get-me'
 
 const useCurrentUser = () => {
    const sessionStatus = useSessionStore((state) => state.status)
@@ -11,7 +11,7 @@ const useCurrentUser = () => {
    return useQuery({
       queryKey: userQueryKeys.me(),
       queryFn: getMeRequest,
-      enabled: sessionStatus === "authenticated",
+      enabled: sessionStatus === 'authenticated',
       staleTime: 5 * 60 * 1000,
       retry: false,
    })

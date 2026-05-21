@@ -1,4 +1,4 @@
-export type ApplicationStatus = "NEW" | "IN_PROGRESS" | "DONE" | "CANCELLED"
+export type ApplicationStatus = 'NEW' | 'IN_PROGRESS' | 'DONE' | 'CANCELLED'
 
 export type Application = {
    id: string

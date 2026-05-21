@@ -1,6 +1,6 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common'
 
-import { UsersService } from './users.service';
+import { UsersService } from './users.service'
 
 describe('UsersService', () => {
    it('returns nested role assignments in findAll', async () => {
@@ -37,9 +37,9 @@ describe('UsersService', () => {
             createMany: jest.fn(),
          },
          $transaction: jest.fn(),
-      };
+      }
 
-      const usersService = new UsersService(prismaService as never);
+      const usersService = new UsersService(prismaService as never)
 
       await expect(usersService.findAll()).resolves.toEqual([
          {
@@ -62,8 +62,8 @@ describe('UsersService', () => {
                },
             ],
          },
-      ]);
-   });
+      ])
+   })
 
    it('throws NotFoundException when user is missing in findById', async () => {
       const prismaService = {
@@ -78,14 +78,12 @@ describe('UsersService', () => {
             createMany: jest.fn(),
          },
          $transaction: jest.fn(),
-      };
+      }
 
-      const usersService = new UsersService(prismaService as never);
+      const usersService = new UsersService(prismaService as never)
 
-      await expect(usersService.findById('missing-id')).rejects.toBeInstanceOf(
-         NotFoundException,
-      );
-   });
+      await expect(usersService.findById('missing-id')).rejects.toBeInstanceOf(NotFoundException)
+   })
 
    it('replaces roles for an existing user', async () => {
       const transactionContext = {
@@ -93,7 +91,7 @@ describe('UsersService', () => {
             createMany: jest.fn().mockResolvedValue({ count: 1 }),
             deleteMany: jest.fn().mockResolvedValue({ count: 1 }),
          },
-      };
+      }
       const prismaService = {
          user: {
             findMany: jest.fn(),
@@ -134,18 +132,15 @@ describe('UsersService', () => {
             ]),
          },
          roleAssignment: transactionContext.roleAssignment,
-         $transaction: jest.fn().mockImplementation(
-            <
-               TValue,
-            >(
-               callback: (
-                  tx: typeof transactionContext,
-               ) => Promise<TValue>,
-            ) => callback(transactionContext),
-         ),
-      };
+         $transaction: jest
+            .fn()
+            .mockImplementation(
+               <TValue>(callback: (tx: typeof transactionContext) => Promise<TValue>) =>
+                  callback(transactionContext),
+            ),
+      }
 
-      const usersService = new UsersService(prismaService as never);
+      const usersService = new UsersService(prismaService as never)
 
       await expect(
          usersService.replaceUserRoles('user-1', 'admin-1', {
@@ -170,10 +165,10 @@ describe('UsersService', () => {
                },
             },
          ],
-      });
+      })
       expect(prismaService.roleAssignment.deleteMany).toHaveBeenCalledWith({
          where: { userId: 'user-1' },
-      });
+      })
       expect(prismaService.roleAssignment.createMany).toHaveBeenCalledWith({
          data: [
             {
@@ -182,8 +177,8 @@ describe('UsersService', () => {
                grantedBy: 'admin-1',
             },
          ],
-      });
-   });
+      })
+   })
 
    it('fails role replacement when any role is missing', async () => {
       const prismaService = {
@@ -201,16 +196,16 @@ describe('UsersService', () => {
             deleteMany: jest.fn(),
          },
          $transaction: jest.fn(),
-      };
+      }
 
-      const usersService = new UsersService(prismaService as never);
+      const usersService = new UsersService(prismaService as never)
 
       await expect(
          usersService.replaceUserRoles('user-1', 'admin-1', {
             roleIds: ['role-1'],
          }),
-      ).rejects.toBeInstanceOf(BadRequestException);
-   });
+      ).rejects.toBeInstanceOf(BadRequestException)
+   })
 
    it('updates a user and replaces their roles', async () => {
       const transactionContext = {
@@ -223,7 +218,7 @@ describe('UsersService', () => {
             createMany: jest.fn().mockResolvedValue({ count: 1 }),
             deleteMany: jest.fn().mockResolvedValue({ count: 1 }),
          },
-      };
+      }
       const prismaService = {
          user: {
             findMany: jest.fn(),
@@ -264,18 +259,15 @@ describe('UsersService', () => {
             ]),
          },
          roleAssignment: transactionContext.roleAssignment,
-         $transaction: jest.fn().mockImplementation(
-            <
-               TValue,
-            >(
-               callback: (
-                  tx: typeof transactionContext,
-               ) => Promise<TValue>,
-            ) => callback(transactionContext),
-         ),
-      };
+         $transaction: jest
+            .fn()
+            .mockImplementation(
+               <TValue>(callback: (tx: typeof transactionContext) => Promise<TValue>) =>
+                  callback(transactionContext),
+            ),
+      }
 
-      const usersService = new UsersService(prismaService as never);
+      const usersService = new UsersService(prismaService as never)
 
       await expect(
          usersService.updateUser('user-1', 'admin-1', {
@@ -305,36 +297,36 @@ describe('UsersService', () => {
                },
             },
          ],
-      });
-      expect(transactionContext.user.update).toHaveBeenCalledTimes(1);
+      })
+      expect(transactionContext.user.update).toHaveBeenCalledTimes(1)
       const [updateArgs] = transactionContext.user.update.mock.calls[0] as [
          {
-            where: { id: string };
+            where: { id: string }
             data: {
-               email: string;
-               firstName: string;
-               lastName: string;
-               position: string;
-               passwordHash: string;
-            };
-            select: { id: boolean };
+               email: string
+               firstName: string
+               lastName: string
+               position: string
+               passwordHash: string
+            }
+            select: { id: boolean }
          },
-      ];
+      ]
       expect(updateArgs.where).toEqual({
          id: 'user-1',
-      });
-      expect(updateArgs.data.email).toBe('updated.user@example.com');
-      expect(updateArgs.data.firstName).toBe('Updated');
-      expect(updateArgs.data.lastName).toBe('User');
-      expect(updateArgs.data.position).toBe('Director');
-      expect(typeof updateArgs.data.passwordHash).toBe('string');
-      expect(updateArgs.data.passwordHash).not.toBe('UpdatedPass123!');
+      })
+      expect(updateArgs.data.email).toBe('updated.user@example.com')
+      expect(updateArgs.data.firstName).toBe('Updated')
+      expect(updateArgs.data.lastName).toBe('User')
+      expect(updateArgs.data.position).toBe('Director')
+      expect(typeof updateArgs.data.passwordHash).toBe('string')
+      expect(updateArgs.data.passwordHash).not.toBe('UpdatedPass123!')
       expect(updateArgs.select).toEqual({
          id: true,
-      });
+      })
       expect(transactionContext.roleAssignment.deleteMany).toHaveBeenCalledWith({
          where: { userId: 'user-1' },
-      });
+      })
       expect(transactionContext.roleAssignment.createMany).toHaveBeenCalledWith({
          data: [
             {
@@ -343,6 +335,6 @@ describe('UsersService', () => {
                grantedBy: 'admin-1',
             },
          ],
-      });
-   });
-});
+      })
+   })
+})

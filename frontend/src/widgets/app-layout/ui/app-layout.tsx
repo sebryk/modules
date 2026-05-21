@@ -1,17 +1,17 @@
-import type { CSSProperties } from "react"
-import { Outlet } from "react-router"
+import type { CSSProperties } from 'react'
+import { Outlet } from 'react-router'
 
-import { AppSidebar } from "@/widgets/app-sidebar"
-import { SiteHeader } from "@/widgets/site-header"
-import { SidebarInset, SidebarProvider } from "@/shared/ui/sidebar"
+import { AppSidebar } from '@/widgets/app-sidebar'
+import { SiteHeader } from '@/widgets/site-header'
+import { SidebarInset, SidebarProvider } from '@/shared/ui/sidebar'
 
 const RootLayout = () => {
    return (
       <SidebarProvider
          style={
             {
-               "--sidebar-width": "calc(var(--spacing) * 72)",
-               "--header-height": "calc(var(--spacing) * 12)",
+               '--sidebar-width': 'calc(var(--spacing) * 72)',
+               '--header-height': 'calc(var(--spacing) * 12)',
             } as CSSProperties
          }
       >

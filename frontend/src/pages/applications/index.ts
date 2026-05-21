@@ -1,1 +1,1 @@
-export { ApplicationsPage } from "./ui/applications"
+export { ApplicationsPage } from './ui/applications'

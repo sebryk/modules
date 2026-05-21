@@ -1,12 +1,12 @@
-import 'dotenv/config';
+import 'dotenv/config'
 
-import * as argon2 from 'argon2';
-import { PrismaClient } from '@prisma/client';
+import * as argon2 from 'argon2'
+import { PrismaClient } from '@prisma/client'
 
-import { PASSWORD_HASH_OPTIONS } from '../src/auth/auth.constants';
-import { createPrismaClientOptions } from '../src/prisma/prisma-client-options';
+import { PASSWORD_HASH_OPTIONS } from '../src/auth/auth.constants'
+import { createPrismaClientOptions } from '../src/prisma/prisma-client-options'
 
-const prisma = new PrismaClient(createPrismaClientOptions());
+const prisma = new PrismaClient(createPrismaClientOptions())
 
 const systemPermissions = [
    'application:read',
@@ -19,14 +19,14 @@ const systemPermissions = [
    'user:update',
    'user:delete',
    'role:read',
-] as const satisfies readonly string[];
+] as const satisfies readonly string[]
 
 const seed = async (): Promise<void> => {
-   const adminEmail = process.env.TEST_ADMIN_EMAIL;
-   const adminPassword = process.env.TEST_ADMIN_PASSWORD;
+   const adminEmail = process.env.TEST_ADMIN_EMAIL
+   const adminPassword = process.env.TEST_ADMIN_PASSWORD
 
    if (!adminEmail || !adminPassword) {
-      throw new Error('TEST_ADMIN_EMAIL and TEST_ADMIN_PASSWORD are required');
+      throw new Error('TEST_ADMIN_EMAIL and TEST_ADMIN_PASSWORD are required')
    }
 
    const adminRole = await prisma.role.upsert({
@@ -40,11 +40,11 @@ const seed = async (): Promise<void> => {
          description: 'Системный администратор',
          isSystem: true,
       },
-   });
+   })
 
    const permissions = await Promise.all(
       systemPermissions.map(async (permission) => {
-         const [resource, action] = permission.split(':');
+         const [resource, action] = permission.split(':')
 
          return prisma.permission.upsert({
             where: {
@@ -58,9 +58,9 @@ const seed = async (): Promise<void> => {
                resource,
                action,
             },
-         });
+         })
       }),
-   );
+   )
 
    await Promise.all(
       permissions.map(async (permission) =>
@@ -78,9 +78,9 @@ const seed = async (): Promise<void> => {
             },
          }),
       ),
-   );
+   )
 
-   const passwordHash = await argon2.hash(adminPassword, PASSWORD_HASH_OPTIONS);
+   const passwordHash = await argon2.hash(adminPassword, PASSWORD_HASH_OPTIONS)
 
    const adminUser = await prisma.user.upsert({
       where: { email: adminEmail },
@@ -97,7 +97,7 @@ const seed = async (): Promise<void> => {
          position: 'Администратор',
          passwordHash,
       },
-   });
+   })
 
    await prisma.roleAssignment.upsert({
       where: {
@@ -114,15 +114,15 @@ const seed = async (): Promise<void> => {
          roleId: adminRole.id,
          grantedBy: adminUser.id,
       },
-   });
-};
+   })
+}
 
 const main = async (): Promise<void> => {
    try {
-      await seed();
+      await seed()
    } finally {
-      await prisma.$disconnect();
+      await prisma.$disconnect()
    }
-};
+}
 
-void main();
+void main()

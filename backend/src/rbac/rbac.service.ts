@@ -4,19 +4,15 @@ import {
    ForbiddenException,
    Injectable,
    NotFoundException,
-} from '@nestjs/common';
+} from '@nestjs/common'
 
-import { isPrismaErrorCode } from '../prisma/prisma-errors';
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateRoleDto } from './dto/create-role.dto';
-import { UpdateRoleDto } from './dto/update-role.dto';
-import { PermissionsService } from './permissions.service';
-import {
-   baseRoleSelect,
-   permissionSelect,
-   rolePermissionsSelect,
-} from './rbac.select';
-import type { Permission, Role } from './rbac.types';
+import { isPrismaErrorCode } from '../prisma/prisma-errors'
+import { PrismaService } from '../prisma/prisma.service'
+import { CreateRoleDto } from './dto/create-role.dto'
+import { UpdateRoleDto } from './dto/update-role.dto'
+import { PermissionsService } from './permissions.service'
+import { baseRoleSelect, permissionSelect, rolePermissionsSelect } from './rbac.select'
+import type { Permission, Role } from './rbac.types'
 
 @Injectable()
 export class RbacService {
@@ -32,26 +28,21 @@ export class RbacService {
             ...(withPermissions && rolePermissionsSelect),
          },
          orderBy: [{ isSystem: 'desc' }, { name: 'asc' }],
-      });
+      })
 
       if (!withPermissions) {
-         return roles;
+         return roles
       }
 
-      return roles.map((role) => this.mapRoleWithPermissions(role as never));
+      return roles.map((role) => this.mapRoleWithPermissions(role as never))
    }
 
-   public async createRole(
-      actorId: string,
-      createRoleDto: CreateRoleDto,
-   ): Promise<Role> {
+   public async createRole(actorId: string, createRoleDto: CreateRoleDto): Promise<Role> {
       if (createRoleDto.isSystem) {
-         await this.ensureManageSystemPermission(actorId);
+         await this.ensureManageSystemPermission(actorId)
       }
 
-      const permissions = await this.loadPermissions(
-         createRoleDto.permissionIds,
-      );
+      const permissions = await this.loadPermissions(createRoleDto.permissionIds)
 
       try {
          const role = await this.prismaService.$transaction(async (tx) => {
@@ -62,7 +53,7 @@ export class RbacService {
                   isSystem: createRoleDto.isSystem ?? false,
                },
                select: baseRoleSelect,
-            });
+            })
 
             if (createRoleDto.permissionIds.length > 0) {
                await tx.rolePermission.createMany({
@@ -70,25 +61,22 @@ export class RbacService {
                      roleId: createdRole.id,
                      permissionId,
                   })),
-               });
+               })
             }
 
-            return createdRole;
-         });
+            return createdRole
+         })
 
          return {
             ...role,
-            permissions: this.orderPermissions(
-               permissions,
-               createRoleDto.permissionIds,
-            ),
-         };
+            permissions: this.orderPermissions(permissions, createRoleDto.permissionIds),
+         }
       } catch (error) {
          if (isPrismaErrorCode(error, 'P2002')) {
-            throw new ConflictException('Role with this name already exists');
+            throw new ConflictException('Role with this name already exists')
          }
 
-         throw error;
+         throw error
       }
    }
 
@@ -102,19 +90,17 @@ export class RbacService {
             id: roleId,
          },
          select: baseRoleSelect,
-      });
+      })
 
       if (!existingRole) {
-         throw new NotFoundException(`Role with id ${roleId} not found`);
+         throw new NotFoundException(`Role with id ${roleId} not found`)
       }
 
       if (existingRole.isSystem) {
-         await this.ensureManageSystemPermission(actorId);
+         await this.ensureManageSystemPermission(actorId)
       }
 
-      const permissions = await this.loadPermissions(
-         updateRoleDto.permissionIds,
-      );
+      const permissions = await this.loadPermissions(updateRoleDto.permissionIds)
 
       try {
          const role = await this.prismaService.$transaction(async (tx) => {
@@ -122,7 +108,7 @@ export class RbacService {
                where: {
                   roleId,
                },
-            });
+            })
 
             if (updateRoleDto.permissionIds.length > 0) {
                await tx.rolePermission.createMany({
@@ -130,7 +116,7 @@ export class RbacService {
                      roleId,
                      permissionId,
                   })),
-               });
+               })
             }
 
             return tx.role.update({
@@ -142,30 +128,25 @@ export class RbacService {
                   description: updateRoleDto.description ?? null,
                },
                select: baseRoleSelect,
-            });
-         });
+            })
+         })
 
          return {
             ...role,
-            permissions: this.orderPermissions(
-               permissions,
-               updateRoleDto.permissionIds,
-            ),
-         };
+            permissions: this.orderPermissions(permissions, updateRoleDto.permissionIds),
+         }
       } catch (error) {
          if (isPrismaErrorCode(error, 'P2002')) {
-            throw new ConflictException('Role with this name already exists');
+            throw new ConflictException('Role with this name already exists')
          }
 
-         throw error;
+         throw error
       }
    }
 
-   private async loadPermissions(
-      permissionIds: string[],
-   ): Promise<Permission[]> {
+   private async loadPermissions(permissionIds: string[]): Promise<Permission[]> {
       if (permissionIds.length === 0) {
-         return [];
+         return []
       }
 
       const permissions = await this.prismaService.permission.findMany({
@@ -175,32 +156,31 @@ export class RbacService {
             },
          },
          select: permissionSelect,
-      });
+      })
 
       if (permissions.length !== permissionIds.length) {
-         throw new BadRequestException('One or more permissions do not exist');
+         throw new BadRequestException('One or more permissions do not exist')
       }
 
-      return permissions;
+      return permissions
    }
 
    private async ensureManageSystemPermission(actorId: string): Promise<void> {
-      const permissions =
-         await this.permissionsService.getUserPermissions(actorId);
+      const permissions = await this.permissionsService.getUserPermissions(actorId)
 
       if (!permissions.has('role:manage_system')) {
-         throw new ForbiddenException('Permission denied');
+         throw new ForbiddenException('Permission denied')
       }
    }
 
    private mapRoleWithPermissions(role: {
-      id: string;
-      name: string;
-      description: string | null;
-      isSystem: boolean;
+      id: string
+      name: string
+      description: string | null
+      isSystem: boolean
       rolePermissions: Array<{
-         permission: Permission;
-      }>;
+         permission: Permission
+      }>
    }): Role {
       return {
          id: role.id,
@@ -208,27 +188,20 @@ export class RbacService {
          description: role.description,
          isSystem: role.isSystem,
          permissions: role.rolePermissions.map(({ permission }) => permission),
-      };
+      }
    }
 
-   private orderPermissions(
-      permissions: Permission[],
-      permissionIds: string[],
-   ): Permission[] {
-      const permissionById = new Map(
-         permissions.map((permission) => [permission.id, permission]),
-      );
+   private orderPermissions(permissions: Permission[], permissionIds: string[]): Permission[] {
+      const permissionById = new Map(permissions.map((permission) => [permission.id, permission]))
 
       return permissionIds.map((permissionId) => {
-         const permission = permissionById.get(permissionId);
+         const permission = permissionById.get(permissionId)
 
          if (!permission) {
-            throw new BadRequestException(
-               'One or more permissions do not exist',
-            );
+            throw new BadRequestException('One or more permissions do not exist')
          }
 
-         return permission;
-      });
+         return permission
+      })
    }
 }

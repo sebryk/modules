@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common'
 
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service'
 
 @Injectable()
 export class PermissionsService {
@@ -23,10 +23,8 @@ export class PermissionsService {
             resource: true,
             action: true,
          },
-      });
+      })
 
-      return new Set(
-         permissions.map(({ resource, action }) => `${resource}:${action}`),
-      );
+      return new Set(permissions.map(({ resource, action }) => `${resource}:${action}`))
    }
 }

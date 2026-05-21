@@ -1,21 +1,16 @@
-import { logoutSession } from "@/entities/session"
-import { ROUTES } from "@/shared/config/routes"
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar"
+import { logoutSession } from '@/entities/session'
+import { ROUTES } from '@/shared/config/routes'
+import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
 import {
    DropdownMenu,
    DropdownMenuContent,
    DropdownMenuItem,
    DropdownMenuLabel,
    DropdownMenuTrigger,
-} from "@/shared/ui/dropdown-menu"
-import {
-   SidebarMenu,
-   SidebarMenuButton,
-   SidebarMenuItem,
-   useSidebar,
-} from "@/shared/ui/sidebar"
-import { EllipsisVerticalIcon, LogOutIcon } from "lucide-react"
-import { useNavigate } from "react-router"
+} from '@/shared/ui/dropdown-menu'
+import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/shared/ui/sidebar'
+import { EllipsisVerticalIcon, LogOutIcon } from 'lucide-react'
+import { useNavigate } from 'react-router'
 
 type NavUserProps = {
    firstName: string
@@ -37,9 +32,7 @@ function UserInfo({ firstName, lastName, email }: NavUserProps) {
             <span className="truncate font-medium">
                {firstName} {lastName}
             </span>
-            <span className="truncate text-xs text-muted-foreground">
-               {email}
-            </span>
+            <span className="truncate text-xs text-muted-foreground">{email}</span>
          </div>
       </>
    )
@@ -74,26 +67,20 @@ export function NavUser({ firstName, lastName, email, avatar }: NavUserProps) {
                         <span className="truncate font-medium">
                            {firstName} {lastName}
                         </span>
-                        <span className="truncate text-xs text-muted-foreground">
-                           {email}
-                        </span>
+                        <span className="truncate text-xs text-muted-foreground">{email}</span>
                      </div>
                      <EllipsisVerticalIcon className="ml-auto size-4" />
                   </SidebarMenuButton>
                </DropdownMenuTrigger>
                <DropdownMenuContent
                   className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-                  side={isMobile ? "bottom" : "right"}
+                  side={isMobile ? 'bottom' : 'right'}
                   align="end"
                   sideOffset={4}
                >
                   <DropdownMenuLabel className="p-0 font-normal">
                      <div className="flex items-center gap-2 px-1 py-1">
-                        <UserInfo
-                           firstName={firstName}
-                           lastName={lastName}
-                           email={email}
-                        />
+                        <UserInfo firstName={firstName} lastName={lastName} email={email} />
                      </div>
                   </DropdownMenuLabel>
                   <DropdownMenuItem onClick={handleLogout}>

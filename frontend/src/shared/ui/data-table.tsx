@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/incompatible-library */
-import * as React from "react"
+import * as React from 'react'
 import {
    closestCenter,
    DndContext,
@@ -10,13 +10,9 @@ import {
    useSensors,
    type DragEndEvent,
    type UniqueIdentifier,
-} from "@dnd-kit/core"
-import { restrictToVerticalAxis } from "@dnd-kit/modifiers"
-import {
-   arrayMove,
-   SortableContext,
-   verticalListSortingStrategy,
-} from "@dnd-kit/sortable"
+} from '@dnd-kit/core'
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
+import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import {
    flexRender,
    getCoreRowModel,
@@ -31,27 +27,20 @@ import {
    type Row,
    type SortingState,
    type VisibilityState,
-} from "@tanstack/react-table"
+} from '@tanstack/react-table'
 
-import { Button } from "@/shared/ui/button"
-import { Checkbox } from "@/shared/ui/checkbox"
+import { Button } from '@/shared/ui/button'
+import { Checkbox } from '@/shared/ui/checkbox'
 import {
    DropdownMenu,
    DropdownMenuContent,
    DropdownMenuItem,
    DropdownMenuSeparator,
    DropdownMenuTrigger,
-} from "@/shared/ui/dropdown-menu"
-import {
-   Table,
-   TableBody,
-   TableCell,
-   TableHead,
-   TableHeader,
-   TableRow,
-} from "@/shared/ui/table"
-import { Tabs, TabsContent } from "@/shared/ui/tabs"
-import { EllipsisVerticalIcon } from "lucide-react"
+} from '@/shared/ui/dropdown-menu'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
+import { Tabs, TabsContent } from '@/shared/ui/tabs'
+import { EllipsisVerticalIcon } from 'lucide-react'
 
 type DataTableItem = {
    id: number
@@ -63,17 +52,15 @@ type DataTableItem = {
 
 const columns: ColumnDef<DataTableItem>[] = [
    {
-      id: "select",
+      id: 'select',
       header: ({ table }) => (
          <div className="flex items-center justify-center">
             <Checkbox
                checked={
                   table.getIsAllPageRowsSelected() ||
-                  (table.getIsSomePageRowsSelected() && "indeterminate")
+                  (table.getIsSomePageRowsSelected() && 'indeterminate')
                }
-               onCheckedChange={(value) =>
-                  table.toggleAllPageRowsSelected(!!value)
-               }
+               onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
                aria-label="Select all"
             />
          </div>
@@ -91,31 +78,31 @@ const columns: ColumnDef<DataTableItem>[] = [
       enableHiding: false,
    },
    {
-      id: "employee",
-      accessorKey: "employee",
-      header: "ФИО сотрудника",
+      id: 'employee',
+      accessorKey: 'employee',
+      header: 'ФИО сотрудника',
       cell: ({ row }) => {
          return <div>{row.original.employee}</div>
       },
    },
    {
-      id: "email",
-      accessorKey: "email",
-      header: "Электронная почта",
+      id: 'email',
+      accessorKey: 'email',
+      header: 'Электронная почта',
       cell: ({ row }) => {
          return <div>{row.original.email}</div>
       },
    },
    {
-      id: "position",
-      accessorKey: "position",
-      header: "Должность",
+      id: 'position',
+      accessorKey: 'position',
+      header: 'Должность',
       cell: ({ row }) => {
          return <div>{row.original.position}</div>
       },
    },
    {
-      id: "actions",
+      id: 'actions',
       cell: () => (
          <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -155,11 +142,8 @@ function Row({ row }: { row: Row<DataTableItem> }) {
 export function DataTable({ data: initialData }: { data: DataTableItem[] }) {
    const [data, setData] = React.useState(() => initialData)
    const [rowSelection, setRowSelection] = React.useState({})
-   const [columnVisibility, setColumnVisibility] =
-      React.useState<VisibilityState>({})
-   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-      []
-   )
+   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
+   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
    const [sorting, setSorting] = React.useState<SortingState>([])
    const [pagination, setPagination] = React.useState({
       pageIndex: 0,
@@ -169,13 +153,10 @@ export function DataTable({ data: initialData }: { data: DataTableItem[] }) {
    const sensors = useSensors(
       useSensor(MouseSensor, {}),
       useSensor(TouchSensor, {}),
-      useSensor(KeyboardSensor, {})
+      useSensor(KeyboardSensor, {}),
    )
 
-   const dataIds = React.useMemo<UniqueIdentifier[]>(
-      () => data?.map(({ id }) => id) || [],
-      [data]
-   )
+   const dataIds = React.useMemo<UniqueIdentifier[]>(() => data?.map(({ id }) => id) || [], [data])
 
    const table = useReactTable({
       data,
@@ -214,10 +195,7 @@ export function DataTable({ data: initialData }: { data: DataTableItem[] }) {
    }
 
    return (
-      <Tabs
-         defaultValue="outline"
-         className="w-full flex-col justify-start gap-6"
-      >
+      <Tabs defaultValue="outline" className="w-full flex-col justify-start gap-6">
          <TabsContent
             value="outline"
             className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6"
@@ -236,15 +214,12 @@ export function DataTable({ data: initialData }: { data: DataTableItem[] }) {
                            <TableRow key={headerGroup.id}>
                               {headerGroup.headers.map((header) => {
                                  return (
-                                    <TableHead
-                                       key={header.id}
-                                       colSpan={header.colSpan}
-                                    >
+                                    <TableHead key={header.id} colSpan={header.colSpan}>
                                        {header.isPlaceholder
                                           ? null
                                           : flexRender(
                                                header.column.columnDef.header,
-                                               header.getContext()
+                                               header.getContext(),
                                             )}
                                     </TableHead>
                                  )
@@ -254,20 +229,14 @@ export function DataTable({ data: initialData }: { data: DataTableItem[] }) {
                      </TableHeader>
                      <TableBody className="**:data-[slot=table-cell]:first:w-8">
                         {table.getRowModel().rows?.length ? (
-                           <SortableContext
-                              items={dataIds}
-                              strategy={verticalListSortingStrategy}
-                           >
+                           <SortableContext items={dataIds} strategy={verticalListSortingStrategy}>
                               {table.getRowModel().rows.map((row) => (
                                  <Row key={row.id} row={row} />
                               ))}
                            </SortableContext>
                         ) : (
                            <TableRow>
-                              <TableCell
-                                 colSpan={columns.length}
-                                 className="h-24 text-center"
-                              >
+                              <TableCell colSpan={columns.length} className="h-24 text-center">
                                  No results.
                               </TableCell>
                            </TableRow>

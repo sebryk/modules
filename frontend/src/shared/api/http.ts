@@ -1,15 +1,11 @@
-import axios, { AxiosError } from "axios"
+import axios, { AxiosError } from 'axios'
 
-import {
-   clearSession,
-   getAccessToken,
-   setAccessToken,
-} from "@/entities/session"
-import { refreshAccessTokenRequest } from "@/shared/api/auth"
-import { getApiBaseUrl } from "@/shared/api/config"
-import { ROUTES } from "@/shared/config/routes"
+import { clearSession, getAccessToken, setAccessToken } from '@/entities/session'
+import { refreshAccessTokenRequest } from '@/shared/api/auth'
+import { getApiBaseUrl } from '@/shared/api/config'
+import { ROUTES } from '@/shared/config/routes'
 
-declare module "axios" {
+declare module 'axios' {
    export interface AxiosRequestConfig {
       skipAuthRefresh?: boolean
    }
@@ -26,7 +22,7 @@ const apiClient = axios.create({
 })
 
 const redirectToLogin = () => {
-   if (typeof window === "undefined") {
+   if (typeof window === 'undefined') {
       return
    }
 
@@ -67,7 +63,7 @@ apiClient.interceptors.request.use((config) => {
       return config
    }
 
-   config.headers.set("authorization", `Bearer ${accessToken}`)
+   config.headers.set('authorization', `Bearer ${accessToken}`)
 
    return config
 })
@@ -78,21 +74,16 @@ apiClient.interceptors.response.use(
       const responseStatus = error.response?.status
       const config = error.config
 
-      if (
-         responseStatus !== 401 ||
-         !config ||
-         config._retry ||
-         config.skipAuthRefresh
-      ) {
+      if (responseStatus !== 401 || !config || config._retry || config.skipAuthRefresh) {
          throw error
       }
 
       config._retry = true
       const nextAccessToken = await recoverAccessToken()
-      config.headers.set("authorization", `Bearer ${nextAccessToken}`)
+      config.headers.set('authorization', `Bearer ${nextAccessToken}`)
 
       return apiClient(config)
-   }
+   },
 )
 
 export { apiClient }

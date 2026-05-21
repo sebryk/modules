@@ -1,14 +1,14 @@
-import * as argon2 from 'argon2';
-import { ValidationPipe } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
-import { JwtService } from '@nestjs/jwt';
-import { FastifyAdapter } from '@nestjs/platform-fastify';
-import type { NestFastifyApplication } from '@nestjs/platform-fastify';
+import * as argon2 from 'argon2'
+import { ValidationPipe } from '@nestjs/common'
+import { Test } from '@nestjs/testing'
+import { JwtService } from '@nestjs/jwt'
+import { FastifyAdapter } from '@nestjs/platform-fastify'
+import type { NestFastifyApplication } from '@nestjs/platform-fastify'
 
-import { AppModule } from '../src/app.module';
-import { registerCookiePlugin } from '../src/auth/auth-cookie';
-import { PASSWORD_HASH_OPTIONS } from '../src/auth/auth.constants';
-import { PrismaService } from '../src/prisma/prisma.service';
+import { AppModule } from '../src/app.module'
+import { registerCookiePlugin } from '../src/auth/auth-cookie'
+import { PASSWORD_HASH_OPTIONS } from '../src/auth/auth.constants'
+import { PrismaService } from '../src/prisma/prisma.service'
 
 const buildPrismaMock = () => ({
    application: {
@@ -20,69 +20,65 @@ const buildPrismaMock = () => ({
    user: {
       findUnique: jest.fn(),
    },
-});
+})
 
 const buildPermissions = (permissions: string[]) =>
    permissions.map((permission) => {
-      const [resource, action] = permission.split(':');
+      const [resource, action] = permission.split(':')
 
       return {
          resource,
          action,
-      };
-   });
+      }
+   })
 
-const isAccessTokenResponse = (
-   value: unknown,
-): value is { accessToken: string } =>
+const isAccessTokenResponse = (value: unknown): value is { accessToken: string } =>
    typeof value === 'object' &&
    value !== null &&
    'accessToken' in value &&
-   typeof value.accessToken === 'string';
+   typeof value.accessToken === 'string'
 
 describe('Auth RBAC', () => {
-   let app: NestFastifyApplication;
-   let prismaMock: ReturnType<typeof buildPrismaMock>;
-   let jwtService: JwtService;
-   let passwordHash: string;
+   let app: NestFastifyApplication
+   let prismaMock: ReturnType<typeof buildPrismaMock>
+   let jwtService: JwtService
+   let passwordHash: string
 
    beforeAll(async () => {
-      process.env.JWT_ACCESS_SECRET = 'test-access-secret';
-      process.env.JWT_REFRESH_SECRET = 'test-refresh-secret';
-      process.env.JWT_ACCESS_TTL = '15m';
-      process.env.JWT_REFRESH_TTL = '7d';
-      passwordHash = await argon2.hash('ChangeMe123!', PASSWORD_HASH_OPTIONS);
-   });
+      process.env.JWT_ACCESS_SECRET = 'test-access-secret'
+      process.env.JWT_REFRESH_SECRET = 'test-refresh-secret'
+      process.env.JWT_ACCESS_TTL = '15m'
+      process.env.JWT_REFRESH_TTL = '7d'
+      passwordHash = await argon2.hash('ChangeMe123!', PASSWORD_HASH_OPTIONS)
+   })
 
    beforeEach(async () => {
-      prismaMock = buildPrismaMock();
+      prismaMock = buildPrismaMock()
 
       const moduleRef = await Test.createTestingModule({
          imports: [AppModule],
       })
          .overrideProvider(PrismaService)
          .useValue(prismaMock)
-         .compile();
+         .compile()
 
-      app = moduleRef.createNestApplication<NestFastifyApplication>(
-         new FastifyAdapter(),
-      );
-      await registerCookiePlugin(app);
+      app = moduleRef.createNestApplication<NestFastifyApplication>(new FastifyAdapter())
+      await registerCookiePlugin(app)
       app.useGlobalPipes(
          new ValidationPipe({
             whitelist: true,
             transform: true,
          }),
-      );
-      await app.init();
-      await app.getHttpAdapter().getInstance().ready();
+      )
+      await app.init()
+      await app.getHttpAdapter().getInstance().ready()
 
-      jwtService = app.get(JwtService);
-   });
+      jwtService = app.get(JwtService)
+   })
 
    afterEach(async () => {
-      await app.close();
-   });
+      await app.close()
+   })
 
    it('returns access token in body and refresh token in cookie on successful login', async () => {
       prismaMock.user.findUnique.mockResolvedValue({
@@ -90,7 +86,7 @@ describe('Auth RBAC', () => {
          email: 'admin@example.com',
          passwordHash,
          createdAt: new Date('2024-01-01T00:00:00.000Z'),
-      });
+      })
 
       const response = await app.inject({
          method: 'POST',
@@ -99,12 +95,12 @@ describe('Auth RBAC', () => {
             email: 'admin@example.com',
             password: 'ChangeMe123!',
          },
-      });
+      })
 
-      expect(response.statusCode).toBe(200);
-      const responseBody: unknown = JSON.parse(response.body);
+      expect(response.statusCode).toBe(200)
+      const responseBody: unknown = JSON.parse(response.body)
 
-      expect(isAccessTokenResponse(responseBody)).toBe(true);
+      expect(isAccessTokenResponse(responseBody)).toBe(true)
       expect(response.cookies).toEqual(
          expect.arrayContaining([
             expect.objectContaining({
@@ -112,8 +108,8 @@ describe('Auth RBAC', () => {
                httpOnly: true,
             }),
          ]),
-      );
-   });
+      )
+   })
 
    it('returns 401 for invalid credentials', async () => {
       prismaMock.user.findUnique.mockResolvedValue({
@@ -121,7 +117,7 @@ describe('Auth RBAC', () => {
          email: 'admin@example.com',
          passwordHash,
          createdAt: new Date('2024-01-01T00:00:00.000Z'),
-      });
+      })
 
       const response = await app.inject({
          method: 'POST',
@@ -130,10 +126,10 @@ describe('Auth RBAC', () => {
             email: 'admin@example.com',
             password: 'WrongPassword123!',
          },
-      });
+      })
 
-      expect(response.statusCode).toBe(401);
-   });
+      expect(response.statusCode).toBe(401)
+   })
 
    it('returns current user and permissions on /auth/me', async () => {
       prismaMock.user.findUnique.mockImplementation(
@@ -144,7 +140,7 @@ describe('Auth RBAC', () => {
                   email: 'admin@example.com',
                   passwordHash,
                   createdAt: new Date('2024-01-01T00:00:00.000Z'),
-               };
+               }
             }
 
             if (where.id === 'user-1') {
@@ -155,15 +151,15 @@ describe('Auth RBAC', () => {
                   lastName: 'Administrator',
                   position: 'Administrator',
                   createdAt: new Date('2024-01-01T00:00:00.000Z'),
-               };
+               }
             }
 
-            return null;
+            return null
          },
-      );
+      )
       prismaMock.permission.findMany.mockResolvedValue(
          buildPermissions(['application:create', 'application:read']),
-      );
+      )
 
       const accessToken = await jwtService.signAsync(
          { sub: 'user-1' },
@@ -171,7 +167,7 @@ describe('Auth RBAC', () => {
             secret: process.env.JWT_ACCESS_SECRET,
             expiresIn: '15m',
          },
-      );
+      )
 
       const response = await app.inject({
          method: 'GET',
@@ -179,9 +175,9 @@ describe('Auth RBAC', () => {
          headers: {
             authorization: `Bearer ${accessToken}`,
          },
-      });
+      })
 
-      expect(response.statusCode).toBe(200);
+      expect(response.statusCode).toBe(200)
       expect(response.json()).toEqual({
          id: 'user-1',
          email: 'admin@example.com',
@@ -190,20 +186,20 @@ describe('Auth RBAC', () => {
          position: 'Administrator',
          createdAt: '2024-01-01T00:00:00.000Z',
          permissions: ['application:create', 'application:read'],
-      });
-   });
+      })
+   })
 
    it('returns 401 for missing access token', async () => {
       const response = await app.inject({
          method: 'GET',
          url: '/auth/me',
-      });
+      })
 
-      expect(response.statusCode).toBe(401);
-   });
+      expect(response.statusCode).toBe(401)
+   })
 
    it('returns 403 when permission is missing', async () => {
-      prismaMock.permission.findMany.mockResolvedValue([]);
+      prismaMock.permission.findMany.mockResolvedValue([])
 
       const accessToken = await jwtService.signAsync(
          { sub: 'user-1' },
@@ -211,7 +207,7 @@ describe('Auth RBAC', () => {
             secret: process.env.JWT_ACCESS_SECRET,
             expiresIn: '15m',
          },
-      );
+      )
 
       const response = await app.inject({
          method: 'GET',
@@ -219,15 +215,13 @@ describe('Auth RBAC', () => {
          headers: {
             authorization: `Bearer ${accessToken}`,
          },
-      });
+      })
 
-      expect(response.statusCode).toBe(403);
-   });
+      expect(response.statusCode).toBe(403)
+   })
 
    it('allows protected endpoint when permission exists', async () => {
-      prismaMock.permission.findMany.mockResolvedValue(
-         buildPermissions(['application:read']),
-      );
+      prismaMock.permission.findMany.mockResolvedValue(buildPermissions(['application:read']))
       prismaMock.application.findMany.mockResolvedValue([
          {
             id: 'application-1',
@@ -238,7 +232,7 @@ describe('Auth RBAC', () => {
             createdAt: new Date('2024-01-01T00:00:00.000Z'),
             updatedAt: new Date('2024-01-01T00:00:00.000Z'),
          },
-      ]);
+      ])
 
       const accessToken = await jwtService.signAsync(
          { sub: 'user-1' },
@@ -246,7 +240,7 @@ describe('Auth RBAC', () => {
             secret: process.env.JWT_ACCESS_SECRET,
             expiresIn: '15m',
          },
-      );
+      )
 
       const response = await app.inject({
          method: 'GET',
@@ -254,9 +248,9 @@ describe('Auth RBAC', () => {
          headers: {
             authorization: `Bearer ${accessToken}`,
          },
-      });
+      })
 
-      expect(response.statusCode).toBe(200);
+      expect(response.statusCode).toBe(200)
       expect(response.json()).toEqual({
          data: [
             {
@@ -269,8 +263,8 @@ describe('Auth RBAC', () => {
                updatedAt: '2024-01-01T00:00:00.000Z',
             },
          ],
-      });
-   });
+      })
+   })
 
    it('refreshes an access token with a refresh token', async () => {
       prismaMock.user.findUnique.mockResolvedValue({
@@ -278,7 +272,7 @@ describe('Auth RBAC', () => {
          email: 'admin@example.com',
          passwordHash,
          createdAt: new Date('2024-01-01T00:00:00.000Z'),
-      });
+      })
 
       const response = await app.inject({
          method: 'POST',
@@ -294,13 +288,13 @@ describe('Auth RBAC', () => {
                )}`,
             ].join('; '),
          },
-      });
+      })
 
-      expect(response.statusCode).toBe(200);
-      const responseBody: unknown = JSON.parse(response.body);
+      expect(response.statusCode).toBe(200)
+      const responseBody: unknown = JSON.parse(response.body)
 
-      expect(isAccessTokenResponse(responseBody)).toBe(true);
-   });
+      expect(isAccessTokenResponse(responseBody)).toBe(true)
+   })
 
    it('rejects access tokens on refresh route', async () => {
       const accessToken = await jwtService.signAsync(
@@ -309,7 +303,7 @@ describe('Auth RBAC', () => {
             secret: process.env.JWT_ACCESS_SECRET,
             expiresIn: '15m',
          },
-      );
+      )
 
       const response = await app.inject({
          method: 'POST',
@@ -317,18 +311,18 @@ describe('Auth RBAC', () => {
          headers: {
             cookie: `refreshToken=${accessToken}`,
          },
-      });
+      })
 
-      expect(response.statusCode).toBe(401);
-   });
+      expect(response.statusCode).toBe(401)
+   })
 
    it('clears refresh cookie on logout', async () => {
       const response = await app.inject({
          method: 'POST',
          url: '/auth/logout',
-      });
+      })
 
-      expect(response.statusCode).toBe(200);
+      expect(response.statusCode).toBe(200)
       expect(response.cookies).toEqual(
          expect.arrayContaining([
             expect.objectContaining({
@@ -336,10 +330,10 @@ describe('Auth RBAC', () => {
                value: '',
             }),
          ]),
-      );
-   });
+      )
+   })
 
    it('stores argon2id password hashes', () => {
-      expect(passwordHash.startsWith('$argon2id$')).toBe(true);
-   });
-});
+      expect(passwordHash.startsWith('$argon2id$')).toBe(true)
+   })
+})

@@ -8,14 +8,14 @@ import {
    Post,
    Query,
    Req,
-} from '@nestjs/common';
+} from '@nestjs/common'
 
-import { RequirePermission } from '../auth/decorators/require-permission.decorator';
-import type { AuthenticatedRequest } from '../common/types/api';
-import { CreateRoleDto } from './dto/create-role.dto';
-import { UpdateRoleDto } from './dto/update-role.dto';
-import type { Role } from './rbac.types';
-import { RbacService } from './rbac.service';
+import { RequirePermission } from '../auth/decorators/require-permission.decorator'
+import type { AuthenticatedRequest } from '../common/types/api'
+import { CreateRoleDto } from './dto/create-role.dto'
+import { UpdateRoleDto } from './dto/update-role.dto'
+import type { Role } from './rbac.types'
+import { RbacService } from './rbac.service'
 
 @Controller('roles')
 export class RbacController {
@@ -23,15 +23,13 @@ export class RbacController {
 
    @Get()
    @RequirePermission('role:read')
-   public async findRoles(
-      @Query('include') include?: string,
-   ): Promise<{ data: Role[] }> {
-      const queries = include?.split(',') ?? [];
+   public async findRoles(@Query('include') include?: string): Promise<{ data: Role[] }> {
+      const queries = include?.split(',') ?? []
       const roles = await this.rbacService.findRoles({
          withPermissions: queries.includes('permissions'),
-      });
+      })
 
-      return { data: roles };
+      return { data: roles }
    }
 
    @Post()
@@ -40,12 +38,9 @@ export class RbacController {
       @Body() createRoleDto: CreateRoleDto,
       @Req() request: AuthenticatedRequest,
    ): Promise<{ data: Role }> {
-      const role = await this.rbacService.createRole(
-         request.user.id,
-         createRoleDto,
-      );
+      const role = await this.rbacService.createRole(request.user.id, createRoleDto)
 
-      return { data: role };
+      return { data: role }
    }
 
    @Patch(':id')
@@ -55,12 +50,8 @@ export class RbacController {
       @Body() updateRoleDto: UpdateRoleDto,
       @Req() request: AuthenticatedRequest,
    ): Promise<{ data: Role }> {
-      const role = await this.rbacService.updateRole(
-         request.user.id,
-         id,
-         updateRoleDto,
-      );
+      const role = await this.rbacService.updateRole(request.user.id, id, updateRoleDto)
 
-      return { data: role };
+      return { data: role }
    }
 }

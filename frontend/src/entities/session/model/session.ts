@@ -1,10 +1,10 @@
-import { create } from "zustand"
+import { create } from 'zustand'
 
-import { logoutRequest } from "@/shared/api/auth"
-import { queryClient } from "@/shared/api/query-client"
-import { authQueryKeys, userQueryKeys } from "@/shared/api/query-keys"
+import { logoutRequest } from '@/shared/api/auth'
+import { queryClient } from '@/shared/api/query-client'
+import { authQueryKeys, userQueryKeys } from '@/shared/api/query-keys'
 
-type SessionStatus = "unknown" | "authenticated" | "anonymous"
+type SessionStatus = 'unknown' | 'authenticated' | 'anonymous'
 
 type SessionState = {
    accessToken: string | null
@@ -15,17 +15,17 @@ type SessionState = {
 
 const useSessionStore = create<SessionState>((set) => ({
    accessToken: null,
-   status: "unknown",
+   status: 'unknown',
    setAccessToken: (accessToken) => {
       set({
          accessToken,
-         status: "authenticated",
+         status: 'authenticated',
       })
    },
    clearSession: () => {
       set({
          accessToken: null,
-         status: "anonymous",
+         status: 'anonymous',
       })
    },
 }))
@@ -39,7 +39,7 @@ const getAccessToken = () => useSessionStore.getState().accessToken
 
 const getSessionStatus = () => useSessionStore.getState().status
 
-const isAuthenticated = () => getSessionStatus() === "authenticated"
+const isAuthenticated = () => getSessionStatus() === 'authenticated'
 
 const logoutSession = async (): Promise<void> => {
    try {

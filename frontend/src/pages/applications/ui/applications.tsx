@@ -1,33 +1,17 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState } from 'react'
 
-import { fetchApplications } from "@/entities/application/api/fetch-applications"
-import type {
-   Application,
-   ApplicationStatus,
-} from "@/entities/application/model/types"
-import { Badge } from "@/shared/ui/badge"
-import { Button } from "@/shared/ui/button"
-import {
-   Card,
-   CardContent,
-   CardDescription,
-   CardHeader,
-   CardTitle,
-} from "@/shared/ui/card"
-import {
-   Table,
-   TableBody,
-   TableCell,
-   TableHead,
-   TableHeader,
-   TableRow,
-} from "@/shared/ui/table"
+import { fetchApplications } from '@/entities/application/api/fetch-applications'
+import type { Application, ApplicationStatus } from '@/entities/application/model/types'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 
 const statusLabels: Record<ApplicationStatus, string> = {
-   NEW: "New",
-   IN_PROGRESS: "In progress",
-   DONE: "Done",
-   CANCELLED: "Cancelled",
+   NEW: 'New',
+   IN_PROGRESS: 'In progress',
+   DONE: 'Done',
+   CANCELLED: 'Cancelled',
 }
 
 const formatDate = (value: string) => {
@@ -37,9 +21,9 @@ const formatDate = (value: string) => {
       return value
    }
 
-   return new Intl.DateTimeFormat("en-US", {
-      dateStyle: "medium",
-      timeStyle: "short",
+   return new Intl.DateTimeFormat('en-US', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
    }).format(date)
 }
 
@@ -56,11 +40,7 @@ const ApplicationsPage = () => {
          const nextApplications = await fetchApplications()
          setApplications(nextApplications)
       } catch (error) {
-         setErrorMessage(
-            error instanceof Error
-               ? error.message
-               : "Failed to fetch applications."
-         )
+         setErrorMessage(error instanceof Error ? error.message : 'Failed to fetch applications.')
       } finally {
          setIsLoading(false)
       }
@@ -85,9 +65,7 @@ const ApplicationsPage = () => {
             }
 
             setErrorMessage(
-               error instanceof Error
-                  ? error.message
-                  : "Failed to fetch applications."
+               error instanceof Error ? error.message : 'Failed to fetch applications.',
             )
          } finally {
             if (isMounted) {
@@ -123,13 +101,11 @@ const ApplicationsPage = () => {
                   <div className="flex flex-col gap-3 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-4">
                      <p className="text-sm text-foreground">{errorMessage}</p>
                      <p className="text-sm text-muted-foreground">
-                        The page stays available even if the API responds with
-                        401, 403, or a network error.
+                        The page stays available even if the API responds with 401, 403, or a
+                        network error.
                      </p>
                      <div>
-                        <Button onClick={() => void loadApplications()}>
-                           Retry request
-                        </Button>
+                        <Button onClick={() => void loadApplications()}>Retry request</Button>
                      </div>
                   </div>
                ) : null}
@@ -156,28 +132,20 @@ const ApplicationsPage = () => {
                            <TableRow key={application.id}>
                               <TableCell className="min-w-52 whitespace-normal">
                                  <div className="space-y-1">
-                                    <p className="font-medium">
-                                       {application.title}
-                                    </p>
+                                    <p className="font-medium">{application.title}</p>
                                     <p className="text-sm text-muted-foreground">
                                        {application.description}
                                     </p>
                                  </div>
                               </TableCell>
                               <TableCell>
-                                 <Badge variant="outline">
-                                    {statusLabels[application.status]}
-                                 </Badge>
+                                 <Badge variant="outline">{statusLabels[application.status]}</Badge>
                               </TableCell>
                               <TableCell className="font-mono text-xs">
                                  {application.createdBy}
                               </TableCell>
-                              <TableCell>
-                                 {formatDate(application.createdAt)}
-                              </TableCell>
-                              <TableCell>
-                                 {formatDate(application.updatedAt)}
-                              </TableCell>
+                              <TableCell>{formatDate(application.createdAt)}</TableCell>
+                              <TableCell>{formatDate(application.updatedAt)}</TableCell>
                            </TableRow>
                         ))}
                      </TableBody>

@@ -1,19 +1,19 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
-import { type User } from '@prisma/client';
-import * as argon2 from 'argon2';
-import type { SignOptions } from 'jsonwebtoken';
+import { Injectable, UnauthorizedException } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
+import { JwtService } from '@nestjs/jwt'
+import { type User } from '@prisma/client'
+import * as argon2 from 'argon2'
+import type { SignOptions } from 'jsonwebtoken'
 
-import { PrismaService } from '../prisma/prisma.service';
-import { PermissionsService } from '../rbac/permissions.service';
-import { PASSWORD_HASH_OPTIONS } from './auth.constants';
-import type { AuthTokens, Me, TokenType } from './auth.types';
+import { PrismaService } from '../prisma/prisma.service'
+import { PermissionsService } from '../rbac/permissions.service'
+import { PASSWORD_HASH_OPTIONS } from './auth.constants'
+import type { AuthTokens, Me, TokenType } from './auth.types'
 
 const DEFAULT_TOKEN_TTLS = {
    ACCESS: '15m',
    REFRESH: '7d',
-} satisfies Record<TokenType, SignOptions['expiresIn']>;
+} satisfies Record<TokenType, SignOptions['expiresIn']>
 
 @Injectable()
 export class AuthService {
@@ -27,43 +27,41 @@ export class AuthService {
    public async login(email: string, password: string): Promise<AuthTokens> {
       const user = await this.prismaService.user.findUnique({
          where: { email },
-      });
+      })
 
       if (!user) {
-         throw new UnauthorizedException('Invalid credentials');
+         throw new UnauthorizedException('Invalid credentials')
       }
 
       const isPasswordValid = await argon2.verify(user.passwordHash, password, {
          ...PASSWORD_HASH_OPTIONS,
-      });
+      })
 
       if (!isPasswordValid) {
-         throw new UnauthorizedException('Invalid credentials');
+         throw new UnauthorizedException('Invalid credentials')
       }
 
       const [accessToken, refreshToken] = await Promise.all([
          this.issueToken(user, 'ACCESS'),
          this.issueToken(user, 'REFRESH'),
-      ]);
+      ])
 
       return {
          accessToken,
          refreshToken,
-      };
+      }
    }
 
-   public async refresh(
-      userId: string,
-   ): Promise<Pick<AuthTokens, 'accessToken'>> {
+   public async refresh(userId: string): Promise<Pick<AuthTokens, 'accessToken'>> {
       const user = await this.prismaService.user.findUnique({
          where: { id: userId },
-      });
+      })
 
       if (!user) {
-         throw new UnauthorizedException('Invalid token');
+         throw new UnauthorizedException('Invalid token')
       }
 
-      return { accessToken: await this.issueToken(user, 'ACCESS') };
+      return { accessToken: await this.issueToken(user, 'ACCESS') }
    }
 
    public async getMe(userId: string): Promise<Me> {
@@ -77,36 +75,30 @@ export class AuthService {
             position: true,
             createdAt: true,
          },
-      });
+      })
 
       if (!user) {
-         throw new UnauthorizedException('Invalid token');
+         throw new UnauthorizedException('Invalid token')
       }
 
-      const permissions =
-         await this.permissionsService.getUserPermissions(userId);
+      const permissions = await this.permissionsService.getUserPermissions(userId)
 
       return {
          ...user,
          permissions: [...permissions].sort(),
-      };
+      }
    }
 
    private async issueToken(user: User, type: TokenType): Promise<string> {
-      const payload = { sub: user.id };
-      const secret = this.configService.getOrThrow<string>(
-         `JWT_${type}_SECRET`,
-      );
+      const payload = { sub: user.id }
+      const secret = this.configService.getOrThrow<string>(`JWT_${type}_SECRET`)
       const ttl = (this.configService.get<string>(`JWT_${type}_TTL`) ??
-         DEFAULT_TOKEN_TTLS[type]) as SignOptions['expiresIn'];
+         DEFAULT_TOKEN_TTLS[type]) as SignOptions['expiresIn']
 
-      return this.jwtService.signAsync(payload, { secret, expiresIn: ttl });
+      return this.jwtService.signAsync(payload, { secret, expiresIn: ttl })
    }
 
    public getRefreshTokenTtl(): string {
-      return (
-         this.configService.get<string>('JWT_REFRESH_TTL') ??
-         DEFAULT_TOKEN_TTLS.REFRESH
-      );
+      return this.configService.get<string>('JWT_REFRESH_TTL') ?? DEFAULT_TOKEN_TTLS.REFRESH
    }
 }

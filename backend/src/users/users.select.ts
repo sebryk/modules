@@ -1,5 +1,5 @@
-import type { Prisma } from '@prisma/client';
-import { baseRoleSelect } from '../rbac/rbac.select';
+import type { Prisma } from '@prisma/client'
+import { baseRoleSelect } from '../rbac/rbac.select'
 
 export const userWithRolesSelect = {
    id: true,
@@ -8,7 +8,7 @@ export const userWithRolesSelect = {
    lastName: true,
    position: true,
    createdAt: true,
-} satisfies Prisma.UserSelect;
+} satisfies Prisma.UserSelect
 
 export const roleAssignmentsSelect = {
    roleAssignments: {
@@ -25,4 +25,4 @@ export const roleAssignmentsSelect = {
          },
       },
    },
-} satisfies Prisma.UserSelect;
+} satisfies Prisma.UserSelect

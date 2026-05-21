@@ -1,4 +1,4 @@
-import { PermissionsService } from './permissions.service';
+import { PermissionsService } from './permissions.service'
 
 describe('PermissionsService', () => {
    it('deduplicates permissions across roles', async () => {
@@ -19,14 +19,12 @@ describe('PermissionsService', () => {
                },
             ]),
          },
-      };
+      }
 
-      const permissionsService = new PermissionsService(prismaService as never);
+      const permissionsService = new PermissionsService(prismaService as never)
 
-      await expect(
-         permissionsService.getUserPermissions('user-1'),
-      ).resolves.toEqual(
+      await expect(permissionsService.getUserPermissions('user-1')).resolves.toEqual(
          new Set(['application:create', 'application:read']),
-      );
-   });
-});
+      )
+   })
+})

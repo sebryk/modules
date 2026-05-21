@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import {
    DropdownMenu,
@@ -6,7 +6,7 @@ import {
    DropdownMenuItem,
    DropdownMenuSeparator,
    DropdownMenuTrigger,
-} from "@/shared/ui/dropdown-menu"
+} from '@/shared/ui/dropdown-menu'
 import {
    SidebarGroup,
    SidebarGroupLabel,
@@ -15,13 +15,8 @@ import {
    SidebarMenuButton,
    SidebarMenuItem,
    useSidebar,
-} from "@/shared/ui/sidebar"
-import {
-   MoreHorizontalIcon,
-   FolderIcon,
-   ShareIcon,
-   Trash2Icon,
-} from "lucide-react"
+} from '@/shared/ui/sidebar'
+import { MoreHorizontalIcon, FolderIcon, ShareIcon, Trash2Icon } from 'lucide-react'
 
 export function NavDocuments({
    items,
@@ -58,8 +53,8 @@ export function NavDocuments({
                      </DropdownMenuTrigger>
                      <DropdownMenuContent
                         className="w-24 rounded-lg"
-                        side={isMobile ? "bottom" : "right"}
-                        align={isMobile ? "end" : "start"}
+                        side={isMobile ? 'bottom' : 'right'}
+                        align={isMobile ? 'end' : 'start'}
                      >
                         <DropdownMenuItem>
                            <FolderIcon />
