@@ -1,5 +1,8 @@
-/* eslint-disable react-refresh/only-export-components */
+import { MantineProvider } from '@mantine/core'
+import { Notifications } from '@mantine/notifications'
 import * as React from 'react'
+
+import { mantineTheme } from '@/shared/config/mantine-theme'
 
 type Theme = 'dark' | 'light' | 'system'
 type ResolvedTheme = 'dark' | 'light'
@@ -73,12 +76,11 @@ function isEditableTarget(target: EventTarget | null) {
    return false
 }
 
-export function ThemeProvider({
+function ThemeProvider({
    children,
    defaultTheme = 'system',
    storageKey = 'theme',
    disableTransitionOnChange = true,
-   ...props
 }: ThemeProviderProps) {
    const [theme, setThemeState] = React.useState<Theme>(() => {
       const storedTheme = localStorage.getItem(storageKey)
@@ -208,13 +210,19 @@ export function ThemeProvider({
    )
 
    return (
-      <ThemeProviderContext.Provider {...props} value={value}>
-         {children}
+      <ThemeProviderContext.Provider value={value}>
+         <MantineProvider
+            forceColorScheme={theme === 'system' ? getSystemTheme() : theme}
+            theme={mantineTheme}
+         >
+            <Notifications position="top-right" />
+            {children}
+         </MantineProvider>
       </ThemeProviderContext.Provider>
    )
 }
 
-export const useTheme = () => {
+const useTheme = () => {
    const context = React.useContext(ThemeProviderContext)
 
    if (context === undefined) {
@@ -223,3 +231,5 @@ export const useTheme = () => {
 
    return context
 }
+
+export { ThemeProvider, useTheme }

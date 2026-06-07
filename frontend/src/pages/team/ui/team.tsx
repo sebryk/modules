@@ -1,22 +1,15 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Container } from '@mantine/core'
+
+import { PagePlaceholder } from '@/shared/components/page-placeholder'
 
 const TeamPage = () => {
    return (
-      <div className="px-4 lg:px-6">
-         <Card>
-            <CardHeader className="gap-3">
-               <CardTitle>Team</CardTitle>
-               <CardDescription>
-                  Team management will live here once the user list API is ready.
-               </CardDescription>
-            </CardHeader>
-            <CardContent>
-               <div className="rounded-lg border border-dashed px-4 py-10 text-sm text-muted-foreground">
-                  This route is wired and ready for the future team module.
-               </div>
-            </CardContent>
-         </Card>
-      </div>
+      <Container fluid={true} px="md">
+         <PagePlaceholder
+            title="Команда"
+            description="Раздел команды будет собран заново на Mantine после завершения миграции shell и базовых экранов."
+         />
+      </Container>
    )
 }
 

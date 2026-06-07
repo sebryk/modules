@@ -35,7 +35,7 @@ const redirectToLogin = () => {
 
 let refreshPromise: Promise<string> | null = null
 
-const recoverAccessToken = async (): Promise<string> => {
+const recoverAccessToken = (): Promise<string> => {
    if (!refreshPromise) {
       refreshPromise = (async () => {
          try {
@@ -72,7 +72,7 @@ apiClient.interceptors.response.use(
    (response) => response,
    async (error: AxiosError) => {
       const responseStatus = error.response?.status
-      const config = error.config
+      const { config } = error
 
       if (responseStatus !== 401 || !config || config._retry || config.skipAuthRefresh) {
          throw error

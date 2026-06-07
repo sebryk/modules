@@ -1,6 +1,6 @@
 import type { ComponentType } from 'react'
-import type { LucideProps } from 'lucide-react'
-import { FolderIcon, HouseIcon, UsersIcon } from 'lucide-react'
+import { FolderIcon, HouseIcon, type LucideProps, UsersIcon } from 'lucide-react'
+
 import { ROUTES } from '@/shared/config/routes'
 
 type AppRouteItem = {

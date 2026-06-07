@@ -3,12 +3,7 @@ import { Navigate, useLocation } from 'react-router'
 
 import { useSessionStore } from '@/entities/session'
 import { ROUTES } from '@/shared/config/routes'
-
-type RedirectState = {
-   from?: {
-      pathname?: string
-   }
-}
+import type { RedirectState } from '@/shared/types/router'
 
 const PublicRoute = ({ children }: { children: ReactNode }) => {
    const location = useLocation()
@@ -20,7 +15,7 @@ const PublicRoute = ({ children }: { children: ReactNode }) => {
    }
 
    if (sessionStatus === 'authenticated') {
-      return <Navigate to={state?.from?.pathname ?? ROUTES.dashboard} replace />
+      return <Navigate replace={true} to={state?.from?.pathname ?? ROUTES.dashboard} />
    }
 
    return <>{children}</>

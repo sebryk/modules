@@ -1,28 +1,16 @@
-import type { ComponentProps } from 'react'
-import { useState } from 'react'
+import type { RedirectState } from '@/shared/types/router'
+
+import { type ComponentProps, useState } from 'react'
+
+import { Button, Paper, PasswordInput, Stack, Text, TextInput, Title } from '@mantine/core'
 import { useLocation, useNavigate } from 'react-router'
 
 import { setAccessToken } from '@/entities/session'
 import { loginRequest } from '@/shared/api/auth'
 import { ROUTES } from '@/shared/config/routes'
-import { cn } from '@/shared/lib/utils'
-import { Button } from '@/shared/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/shared/ui/field'
-import { Input } from '@/shared/ui/input'
 import data from '@/shared/data/login-page.json'
 
-type RedirectState = {
-   from?: {
-      pathname?: string
-   }
-}
-
-type SignInFormProps = {
-   className?: string
-}
-
-const SignInForm = ({ className }: SignInFormProps) => {
+const SignInForm = () => {
    const {
       form: { title, subtitle, inputs, button },
    } = data
@@ -56,8 +44,6 @@ const SignInForm = ({ className }: SignInFormProps) => {
             password,
          })
 
-         console.log(accessToken)
-
          setAccessToken(accessToken)
 
          const nextPath = state?.from?.pathname ?? ROUTES.dashboard
@@ -70,44 +56,71 @@ const SignInForm = ({ className }: SignInFormProps) => {
    }
 
    return (
-      <div className={cn('flex flex-col gap-6', className)}>
-         <Card>
-            <CardHeader>
-               <CardTitle>{title}</CardTitle>
-               <CardDescription>{subtitle}</CardDescription>
-            </CardHeader>
-            <CardContent>
-               <form onSubmit={handleSubmit}>
-                  <FieldGroup>
-                     {inputs.map((input) => (
-                        <Field key={input.name}>
-                           <FieldLabel htmlFor={input.name}>{input.label}</FieldLabel>
-                           <Input
-                              id={input.name}
-                              type={input.type}
-                              placeholder={input.placeholder}
-                              value={userAuth[input.name as keyof typeof userAuth] || ''}
-                              onChange={(e) => {
-                                 const value = e.target.value
-                                 setUserAuth((prev) => ({
-                                    ...prev,
-                                    [input.name]: value,
-                                 }))
-                              }}
-                           />
-                        </Field>
-                     ))}
-                     {errorMessage ? <FieldError>{errorMessage}</FieldError> : null}
-                     <Field>
-                        <Button type="submit" disabled={isSubmitting}>
-                           {isSubmitting ? 'Входим...' : button.title}
-                        </Button>
-                     </Field>
-                  </FieldGroup>
-               </form>
-            </CardContent>
-         </Card>
-      </div>
+      <Paper p="xl" radius="lg" shadow="sm" withBorder={true}>
+         <Stack gap="lg">
+            <Stack gap={4}>
+               <Title order={2}>{title}</Title>
+               <Text size="sm" c="dimmed">
+                  {subtitle}
+               </Text>
+            </Stack>
+
+            <form onSubmit={handleSubmit}>
+               <Stack gap="md">
+                  {inputs.map((input) =>
+                     input.type === 'password' ? (
+                        <PasswordInput
+                           id={input.name}
+                           key={input.name}
+                           label={input.label}
+                           placeholder={input.placeholder}
+                           value={userAuth[input.name as keyof typeof userAuth] || ''}
+                           onChange={(event) => {
+                              const { value } = event.currentTarget
+                              setUserAuth((prev) => ({
+                                 ...prev,
+                                 [input.name]: value,
+                              }))
+                           }}
+                        />
+                     ) : (
+                        <TextInput
+                           id={input.name}
+                           key={input.name}
+                           type={input.type}
+                           label={input.label}
+                           placeholder={input.placeholder}
+                           value={userAuth[input.name as keyof typeof userAuth] || ''}
+                           onChange={(event) => {
+                              const { value } = event.currentTarget
+                              setUserAuth((prev) => ({
+                                 ...prev,
+                                 [input.name]: value,
+                              }))
+                           }}
+                        />
+                     ),
+                  )}
+
+                  {errorMessage ? (
+                     <Text c="red" size="sm">
+                        {errorMessage}
+                     </Text>
+                  ) : null}
+
+                  <Button
+                     mt={40}
+                     type="submit"
+                     fullWidth={true}
+                     loading={isSubmitting}
+                     loaderProps={{ type: 'dots' }}
+                  >
+                     {isSubmitting ? 'Входим...' : button.title}
+                  </Button>
+               </Stack>
+            </form>
+         </Stack>
+      </Paper>
    )
 }
 
