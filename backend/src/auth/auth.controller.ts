@@ -62,7 +62,9 @@ export class AuthController {
    }
 
    @Get('me')
-   public async getMe(@Req() request: AuthenticatedRequest): Promise<Me> {
-      return this.authService.getMe(request.user.id)
+   public async getMe(@Req() request: AuthenticatedRequest): Promise<{ data: Me }> {
+      const user = await this.authService.getMe(request.user.id)
+
+      return { data: user }
    }
 }

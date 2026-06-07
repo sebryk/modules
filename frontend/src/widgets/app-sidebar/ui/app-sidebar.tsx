@@ -19,8 +19,7 @@ import {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
    const sessionStatus = useSessionStore((state) => state.status)
-   const { data } = useCurrentUser()
-   const currentUser = data?.user
+   const { data: user } = useCurrentUser()
 
    return (
       <Sidebar collapsible="icon" {...props}>
@@ -40,11 +39,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <NavMain items={appRoutes} />
          </SidebarContent>
          <SidebarFooter>
-            {sessionStatus === 'authenticated' && currentUser && (
+            {sessionStatus === 'authenticated' && user && (
                <NavUser
-                  firstName={currentUser.firstName || ''}
-                  lastName={currentUser.lastName || ''}
-                  email={currentUser?.email || ''}
+                  firstName={user.firstName || ''}
+                  lastName={user.lastName || ''}
+                  email={user?.email || ''}
                />
             )}
          </SidebarFooter>

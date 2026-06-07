@@ -1,4 +1,4 @@
-type CurrentUser = {
+type User = {
    id: string
    email: string
    firstName: string
@@ -7,9 +7,8 @@ type CurrentUser = {
    createdAt: string
 }
 
-type MeResponse = {
-   user: CurrentUser
+type Me = User & {
    permissions: string[]
 }
 
-export type { CurrentUser, MeResponse }
+export type { User, Me }
