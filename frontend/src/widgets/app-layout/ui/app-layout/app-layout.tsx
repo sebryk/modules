@@ -1,24 +1,12 @@
 import type { ComponentType } from 'react'
 
-import {
-   AppShell,
-   Avatar,
-   Box,
-   Group,
-   NavLink,
-   ScrollArea,
-   Stack,
-   Text,
-   ThemeIcon,
-   UnstyledButton,
-} from '@mantine/core'
+import { AppShell, NavLink, ScrollArea, Stack, ThemeIcon } from '@mantine/core'
 import { ChevronRightIcon, type LucideProps } from 'lucide-react'
 import { Outlet, useLocation, useNavigate } from 'react-router'
 
-import { useCurrentUser } from '@/entities/user'
 import { appRoutes } from '@/shared/config/navigation'
 
-import classes from './styles.module.css'
+import { UserMenu } from '../user-menu/user-menu'
 
 type IconComponent = ComponentType<LucideProps>
 
@@ -30,13 +18,6 @@ const iconProps = {
 const RootLayout = () => {
    const location = useLocation()
    const navigate = useNavigate()
-   const { data: currentUser } = useCurrentUser()
-   // const { theme, setTheme } = useTheme()
-
-   const userName =
-      currentUser?.firstName && currentUser?.lastName
-         ? `${currentUser.firstName} ${currentUser.lastName}`
-         : 'Пользователь'
 
    return (
       <AppShell
@@ -46,39 +27,7 @@ const RootLayout = () => {
             breakpoint: 'sm',
          }}
       >
-         {/* <AppShell.Header>
-            <Group px="md" h="100%" justify="space-between">
-               <Group gap="sm">
-                  <Burger size="sm" hiddenFrom="sm" opened={opened} onClick={toggle} />
-                  <div>
-                     <Text fw={700}>Company Modules</Text>
-                     <Text size="xs" c="dimmed">
-                        {activeTitle}
-                     </Text>
-                  </div>
-               </Group>
-
-               <Group gap="xs">
-                  <ActionIcon
-                     size="lg"
-                     variant="subtle"
-                     onClick={toggleTheme}
-                     aria-label="Toggle theme"
-                  >
-                     {theme === 'dark' ? <SunIcon size={18} /> : <MoonIcon size={18} />}
-                  </ActionIcon>
-                  <Button
-                     variant="light"
-                     onClick={() => void handleLogout()}
-                     leftSection={<LogOutIcon size={16} />}
-                  >
-                     Выйти
-                  </Button>
-               </Group>
-            </Group>
-         </AppShell.Header> */}
-
-         <AppShell.Navbar px="xs" py="md">
+         <AppShell.Navbar pt="xs" pb="sm" px="xs">
             <AppShell.Section grow={true} component={ScrollArea}>
                <Stack gap="xs">
                   {appRoutes.map((route) => {
@@ -114,21 +63,7 @@ const RootLayout = () => {
             </AppShell.Section>
 
             <AppShell.Section>
-               <UnstyledButton className={classes.user}>
-                  <Group>
-                     <Avatar radius="xl" alt="Harriette Spoonlicker" />
-                     <Box style={{ flex: 1 }}>
-                        <Text fw={500} size="sm">
-                           {userName}
-                        </Text>
-
-                        <Text size="xs" c="dimmed">
-                           {currentUser?.email ?? 'Нет данных профиля'}
-                        </Text>
-                     </Box>
-                     <ChevronRightIcon size={16} strokeWidth={1.5} />
-                  </Group>
-               </UnstyledButton>
+               <UserMenu />
             </AppShell.Section>
          </AppShell.Navbar>
 
