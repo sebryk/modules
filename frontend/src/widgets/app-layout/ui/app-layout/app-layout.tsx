@@ -1,19 +1,10 @@
-import type { ComponentType } from 'react'
-
 import { AppShell, NavLink, ScrollArea, Stack, ThemeIcon } from '@mantine/core'
-import { ChevronRightIcon, type LucideProps } from 'lucide-react'
+import { ChevronRightIcon } from 'lucide-react'
 import { Outlet, useLocation, useNavigate } from 'react-router'
 
 import { appRoutes } from '@/shared/config/navigation'
 
 import { UserMenu } from '../user-menu/user-menu'
-
-type IconComponent = ComponentType<LucideProps>
-
-const iconProps = {
-   size: 18,
-   strokeWidth: 1.8,
-}
 
 const RootLayout = () => {
    const location = useLocation()
@@ -31,7 +22,7 @@ const RootLayout = () => {
             <AppShell.Section grow={true} component={ScrollArea}>
                <Stack gap="xs">
                   {appRoutes.map((route) => {
-                     const Icon = route.icon as IconComponent
+                     const Icon = route.icon
                      const isActive = route.end
                         ? location.pathname === route.to
                         : location.pathname.startsWith(route.to)
@@ -53,7 +44,7 @@ const RootLayout = () => {
                                  radius="md"
                                  variant={isActive ? 'filled' : 'light'}
                               >
-                                 <Icon {...iconProps} />
+                                 <Icon size={18} strokeWidth={1.8} />
                               </ThemeIcon>
                            }
                         />

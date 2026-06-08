@@ -8,6 +8,7 @@ import { getMeRequest } from '../api/get-me'
 const useCurrentUser = () => {
    const sessionStatus = useSessionStore((state) => state.status)
 
+
    return useQuery({
       queryKey: userQueryKeys.me(),
       queryFn: getMeRequest,
