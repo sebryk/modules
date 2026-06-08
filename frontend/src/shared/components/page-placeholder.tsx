@@ -10,7 +10,7 @@ const PagePlaceholder = ({ title, description }: PagePlaceholderProps) => {
    return (
       <Paper p="xl" radius="lg" shadow="sm" withBorder={true}>
          <Stack gap="md" maw={560}>
-            <ThemeIcon radius="md" size={44} variant="light">
+            <ThemeIcon size={44} radius="md" variant="light">
                <Clock3Icon size={22} />
             </ThemeIcon>
             <Stack gap={6}>

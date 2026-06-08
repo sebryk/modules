@@ -1,9 +1,11 @@
+import type { RedirectState } from '@/shared/types/router'
+
 import type { ReactNode } from 'react'
+
 import { Navigate, useLocation } from 'react-router'
 
 import { useSessionStore } from '@/entities/session'
 import { ROUTES } from '@/shared/config/routes'
-import type { RedirectState } from '@/shared/types/router'
 
 const PublicRoute = ({ children }: { children: ReactNode }) => {
    const location = useLocation()

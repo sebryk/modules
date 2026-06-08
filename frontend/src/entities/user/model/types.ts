@@ -11,4 +11,4 @@ type Me = User & {
    permissions: string[]
 }
 
-export type { User, Me }
+export type { Me, User }

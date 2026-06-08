@@ -1,6 +1,7 @@
+import * as React from 'react'
+
 import { MantineProvider } from '@mantine/core'
 import { Notifications } from '@mantine/notifications'
-import * as React from 'react'
 
 import { mantineTheme } from '@/shared/config/mantine-theme'
 
@@ -212,8 +213,8 @@ function ThemeProvider({
    return (
       <ThemeProviderContext.Provider value={value}>
          <MantineProvider
-            forceColorScheme={theme === 'system' ? getSystemTheme() : theme}
             theme={mantineTheme}
+            forceColorScheme={theme === 'system' ? getSystemTheme() : theme}
          >
             <Notifications position="top-right" />
             {children}
@@ -232,4 +233,4 @@ const useTheme = () => {
    return context
 }
 
-export { ThemeProvider, useTheme }
+export { useTheme, ThemeProvider }

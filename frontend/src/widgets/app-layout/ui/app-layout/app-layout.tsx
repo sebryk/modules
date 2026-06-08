@@ -12,7 +12,7 @@ import {
    ThemeIcon,
    UnstyledButton,
 } from '@mantine/core'
-import { ChevronRight, ChevronRightIcon, type LucideProps } from 'lucide-react'
+import { ChevronRightIcon, type LucideProps } from 'lucide-react'
 import { Outlet, useLocation, useNavigate } from 'react-router'
 
 import { useCurrentUser } from '@/entities/user'
@@ -37,20 +37,6 @@ const RootLayout = () => {
       currentUser?.firstName && currentUser?.lastName
          ? `${currentUser.firstName} ${currentUser.lastName}`
          : 'Пользователь'
-
-   // const handleLogout = async () => {
-   //    await logoutSession()
-   //    navigate(ROUTES.login, { replace: true })
-   // }
-
-   // const toggleTheme = () => {
-   //    if (theme === 'dark') {
-   //       setTheme('light')
-   //       return
-   //    }
-
-   //    setTheme('dark')
-   // }
 
    return (
       <AppShell
@@ -103,7 +89,7 @@ const RootLayout = () => {
 
                      return (
                         <NavLink
-                           bdrs={6}
+                           bdrs={10}
                            key={route.to}
                            variant="light"
                            active={isActive}
@@ -111,7 +97,6 @@ const RootLayout = () => {
                            rightSection={<ChevronRightIcon size={16} strokeWidth={1.5} />}
                            onClick={() => {
                               navigate(route.to)
-                              close()
                            }}
                            leftSection={
                               <ThemeIcon
@@ -138,10 +123,10 @@ const RootLayout = () => {
                         </Text>
 
                         <Text size="xs" c="dimmed">
-                           hspoonlicker@outlook.com
+                           {currentUser?.email ?? 'Нет данных профиля'}
                         </Text>
                      </Box>
-                     <ChevronRight size={16} />
+                     <ChevronRightIcon size={16} strokeWidth={1.5} />
                   </Group>
                </UnstyledButton>
             </AppShell.Section>

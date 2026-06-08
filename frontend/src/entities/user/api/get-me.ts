@@ -1,6 +1,6 @@
-import { apiClient } from '@/shared/api/http'
-
 import type { Me } from '../model/types'
+
+import { apiClient } from '@/shared/api/http'
 
 const getMeRequest = async (): Promise<Me> => {
    const response = await apiClient.get('/auth/me')

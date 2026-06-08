@@ -1,8 +1,9 @@
 import { useEffect } from 'react'
+
 import { useQuery } from '@tanstack/react-query'
 
-import { authQueryKeys } from '@/shared/api/query-keys'
 import { refreshAccessTokenRequest } from '@/shared/api/auth'
+import { authQueryKeys } from '@/shared/api/query-keys'
 
 import { clearSession, setAccessToken } from './session'
 

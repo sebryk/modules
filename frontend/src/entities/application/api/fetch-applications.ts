@@ -1,4 +1,5 @@
 import type { ApplicationsList } from '@/entities/application/model/types'
+
 import axios from 'axios'
 
 import { apiClient } from '@/shared/api/http'

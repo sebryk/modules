@@ -53,11 +53,11 @@ const logoutSession = async (): Promise<void> => {
 
 export {
    clearSession,
-   getAccessToken,
-   getSessionStatus,
-   isAuthenticated,
    logoutSession,
+   getAccessToken,
    setAccessToken,
+   isAuthenticated,
    useSessionStore,
+   getSessionStatus,
 }
 export type { SessionStatus }
