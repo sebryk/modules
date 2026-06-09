@@ -5,6 +5,7 @@ import {
    Avatar,
    Badge,
    Button,
+   Center,
    Container,
    Group,
    Menu,
@@ -17,8 +18,12 @@ import {
    Text,
    TextInput,
    Title,
+   UnstyledButton,
 } from '@mantine/core'
 import {
+   ChevronsUpDownIcon,
+   ChevronDownIcon,
+   ChevronUpIcon,
    EllipsisIcon,
    PencilIcon,
    SearchIcon,
@@ -29,10 +34,16 @@ import {
    employeeStatusLabels,
    employees,
    type EmployeePosition,
+   type EmployeeRecord,
+   type EmployeeStatus,
 } from '@/shared/mocks/employees'
+
+import classes from './styles.module.css'
 
 const ALL_POSITIONS_VALUE = 'all-positions'
 const ALL_STATUSES_VALUE = 'all-statuses'
+
+type SortBy = 'createdAt' | 'email' | 'name' | 'position' | 'status'
 
 const positionOptions = [
    { value: ALL_POSITIONS_VALUE, label: 'Все должности' },
@@ -70,6 +81,12 @@ const positionColors: Record<EmployeePosition, string> = {
    Руководитель: 'red',
 }
 
+const employeeStatusOrder: Record<EmployeeStatus, number> = {
+   active: 0,
+   invited: 1,
+   vacation: 2,
+}
+
 const formatCreatedAt = (value: string) =>
    new Intl.DateTimeFormat('ru-RU', {
       day: '2-digit',
@@ -92,10 +109,83 @@ const PAGE_SIZE_OPTIONS = [
    { value: '20', label: '20 на странице' },
 ] as const
 
+const TABLE_SECTION_BACKGROUND_COLOR =
+   'light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-7))'
+
+const sortEmployees = (
+   data: EmployeeRecord[],
+   sortBy: SortBy,
+   reversed: boolean,
+) => {
+   const sortedData = [...data].sort((left, right) => {
+      if (sortBy === 'name') {
+         const leftName = `${left.firstName} ${left.lastName}`
+         const rightName = `${right.firstName} ${right.lastName}`
+
+         return leftName.localeCompare(rightName, 'ru')
+      }
+
+      if (sortBy === 'position') {
+         return left.position.localeCompare(right.position, 'ru')
+      }
+
+      if (sortBy === 'email') {
+         return left.email.localeCompare(right.email, 'ru')
+      }
+
+      if (sortBy === 'status') {
+         return employeeStatusOrder[left.status] - employeeStatusOrder[right.status]
+      }
+
+      return new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime()
+   })
+
+   if (reversed) {
+      sortedData.reverse()
+   }
+
+   return sortedData
+}
+
+type SortableHeaderProps = {
+   children: string
+   reversed: boolean
+   sorted: boolean
+   onSort: () => void
+}
+
+const SortableHeader = ({
+   children,
+   reversed,
+   sorted,
+   onSort,
+}: SortableHeaderProps) => (
+   <UnstyledButton onClick={onSort} className={classes['team-page__sort-button']}>
+      <Group wrap="nowrap" justify="space-between">
+         <Text fw={600} size="sm" className={classes['team-page__sort-button-label']}>
+            {children}
+         </Text>
+         <Center className={classes['team-page__sort-icon']}>
+            {sorted ? (
+               reversed ? (
+                  <ChevronDownIcon size={16} strokeWidth={1.5} />
+               ) : (
+                  <ChevronUpIcon size={16} strokeWidth={1.5} />
+               )
+            ) : (
+               <ChevronsUpDownIcon size={16} strokeWidth={1.5} />
+            )}
+         </Center>
+      </Group>
+   </UnstyledButton>
+)
+
 const TeamPage = () => {
    const [searchValue, setSearchValue] = useState('')
    const [positionValue, setPositionValue] = useState<string | null>(ALL_POSITIONS_VALUE)
    const [statusValue, setStatusValue] = useState<string | null>(ALL_STATUSES_VALUE)
+   const [sortBy, setSortBy] = useState<SortBy>('createdAt')
+   const [reverseSortDirection, setReverseSortDirection] = useState(true)
    const [page, setPage] = useState(1)
    const [pageSizeValue, setPageSizeValue] = useState<string | null>('10')
 
@@ -118,9 +208,17 @@ const TeamPage = () => {
       return matchesSearch && matchesPosition && matchesStatus
    })
 
+   const sortedEmployees = sortEmployees(filteredEmployees, sortBy, reverseSortDirection)
    const pageSize = Number(pageSizeValue ?? '10')
-   const totalPages = Math.max(1, Math.ceil(filteredEmployees.length / pageSize))
-   const paginatedEmployees = filteredEmployees.slice((page - 1) * pageSize, page * pageSize)
+   const totalPages = Math.max(1, Math.ceil(sortedEmployees.length / pageSize))
+   const paginatedEmployees = sortedEmployees.slice((page - 1) * pageSize, page * pageSize)
+
+   const setSorting = (field: SortBy) => {
+      const reversed = field === sortBy ? !reverseSortDirection : false
+
+      setReverseSortDirection(reversed)
+      setSortBy(field)
+   }
 
    useEffect(() => {
       setPage(1)
@@ -133,14 +231,11 @@ const TeamPage = () => {
    }, [page, totalPages])
 
    return (
-      <Container px="md" fluid={true}>
+      <Container px="md" fluid={true} bg='var(--mantine-color-dark-7)'>
          <Stack gap="lg">
             <Stack gap={4}>
                <Title order={2}>Сотрудники</Title>
-               <Text size="sm" c="dimmed">
-                  Интерфейс собран на статических данных и подготовлен к подключению backend
-                  списка пользователей и серверных фильтров.
-               </Text>
+            
             </Stack>
 
             <Paper p="lg" radius="lg" shadow="sm" withBorder={true}>
@@ -149,7 +244,7 @@ const TeamPage = () => {
                      <Stack gap={2}>
                         <Text fw={600}>Фильтры</Text>
                         <Text size="sm" c="dimmed">
-                           Поиск и фильтрация пока работают локально на фронтенде.
+                           Поиск и фильтрация
                         </Text>
                      </Stack>
                      <Button
@@ -193,15 +288,6 @@ const TeamPage = () => {
 
             <Paper radius="lg" shadow="sm" withBorder={true} style={{ overflow: 'hidden' }}>
                <Stack gap={0}>
-                  <Group px="lg" py="md" justify="space-between">
-                     <div>
-                        <Text fw={600}>Список сотрудников</Text>
-                        <Text size="sm" c="dimmed">
-                           Найдено: {filteredEmployees.length}, показано: {paginatedEmployees.length}
-                        </Text>
-                     </div>
-                  </Group>
-
                   <ScrollArea>
                      <Table
                         miw={1094}
@@ -218,13 +304,63 @@ const TeamPage = () => {
                            <col style={{ width: TABLE_COLUMN_WIDTHS.createdAt }} />
                            <col style={{ width: TABLE_COLUMN_WIDTHS.actions }} />
                         </colgroup>
-                        <Table.Thead>
+                        <Table.Thead style={{ backgroundColor: TABLE_SECTION_BACKGROUND_COLOR }}>
                            <Table.Tr>
-                              <Table.Th>Сотрудник</Table.Th>
-                              <Table.Th>Должность</Table.Th>
-                              <Table.Th>Email</Table.Th>
-                              <Table.Th>Статус</Table.Th>
-                              <Table.Th>Создан</Table.Th>
+                              <Table.Th>
+                                 <SortableHeader
+                                    sorted={sortBy === 'name'}
+                                    reversed={reverseSortDirection}
+                                    onSort={() => {
+                                       setSorting('name')
+                                    }}
+                                 >
+                                    Сотрудник
+                                 </SortableHeader>
+                              </Table.Th>
+                              <Table.Th>
+                                 <SortableHeader
+                                    sorted={sortBy === 'position'}
+                                    reversed={reverseSortDirection}
+                                    onSort={() => {
+                                       setSorting('position')
+                                    }}
+                                 >
+                                    Должность
+                                 </SortableHeader>
+                              </Table.Th>
+                              <Table.Th>
+                                 <SortableHeader
+                                    sorted={sortBy === 'email'}
+                                    reversed={reverseSortDirection}
+                                    onSort={() => {
+                                       setSorting('email')
+                                    }}
+                                 >
+                                    Email
+                                 </SortableHeader>
+                              </Table.Th>
+                              <Table.Th>
+                                 <SortableHeader
+                                    sorted={sortBy === 'status'}
+                                    reversed={reverseSortDirection}
+                                    onSort={() => {
+                                       setSorting('status')
+                                    }}
+                                 >
+                                    Статус
+                                 </SortableHeader>
+                              </Table.Th>
+                              <Table.Th>
+                                 <SortableHeader
+                                    sorted={sortBy === 'createdAt'}
+                                    reversed={reverseSortDirection}
+                                    onSort={() => {
+                                       setSorting('createdAt')
+                                    }}
+                                 >
+                                    Создан
+                                 </SortableHeader>
+                              </Table.Th>
                               <Table.Th />
                            </Table.Tr>
                         </Table.Thead>
@@ -252,6 +388,9 @@ const TeamPage = () => {
                                     </Table.Td>
                                     <Table.Td>
                                        <Badge
+
+                                          radius="sm"
+                                          fw='initial'
                                           variant="light"
                                           color={positionColors[employee.position]}
                                        >
@@ -264,9 +403,14 @@ const TeamPage = () => {
                                        </Text>
                                     </Table.Td>
                                     <Table.Td>
-                                       <Badge variant="light" color={getStatusColor(employee.status)}>
-                                          {employeeStatusLabels[employee.status]}
-                                       </Badge>
+                                       <Group gap="xs" wrap="nowrap">
+                                          <Text lh={1} size="lg" c={getStatusColor(employee.status)}>
+                                             •
+                                          </Text>
+                                          <Text size="sm">
+                                             {employeeStatusLabels[employee.status]}
+                                          </Text>
+                                       </Group>
                                     </Table.Td>
                                     <Table.Td>
                                        <Text size="sm">{formatCreatedAt(employee.createdAt)}</Text>
@@ -314,10 +458,13 @@ const TeamPage = () => {
                      py="md"
                      wrap="wrap"
                      justify="space-between"
-                     style={{ borderTop: '1px solid var(--mantine-color-dark-4)' }}
+                     style={{
+                        backgroundColor: TABLE_SECTION_BACKGROUND_COLOR,
+                        borderTop: '1px solid var(--mantine-color-dark-4)',
+                     }}
                   >
                      <Text size="sm" c="dimmed">
-                        Страница {page} из {totalPages}
+                        Показано {paginatedEmployees.length} из {filteredEmployees.length} сотрудников
                      </Text>
                      <Group wrap="wrap">
                         <Select
