@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import {
    ActionIcon,
@@ -8,6 +8,7 @@ import {
    Container,
    Group,
    Menu,
+   Pagination,
    Paper,
    ScrollArea,
    Select,
@@ -74,12 +75,20 @@ const TABLE_COLUMN_WIDTHS = {
    actions: 64,
 } as const
 
+const PAGE_SIZE_OPTIONS = [
+   { value: '5', label: '5 на странице' },
+   { value: '10', label: '10 на странице' },
+   { value: '20', label: '20 на странице' },
+] as const
+
 const TeamPage = () => {
    const [searchValue, setSearchValue] = useState('')
    const [departmentValue, setDepartmentValue] = useState<string | null>(
       ALL_DEPARTMENTS_VALUE,
    )
    const [statusValue, setStatusValue] = useState<string | null>(ALL_STATUSES_VALUE)
+   const [page, setPage] = useState(1)
+   const [pageSizeValue, setPageSizeValue] = useState<string | null>('10')
 
    const normalizedSearch = searchValue.trim().toLowerCase()
 
@@ -99,6 +108,20 @@ const TeamPage = () => {
 
       return matchesSearch && matchesDepartment && matchesStatus
    })
+
+   const pageSize = Number(pageSizeValue ?? '10')
+   const totalPages = Math.max(1, Math.ceil(filteredEmployees.length / pageSize))
+   const paginatedEmployees = filteredEmployees.slice((page - 1) * pageSize, page * pageSize)
+
+   useEffect(() => {
+      setPage(1)
+   }, [searchValue, departmentValue, statusValue, pageSize])
+
+   useEffect(() => {
+      if (page > totalPages) {
+         setPage(totalPages)
+      }
+   }, [page, totalPages])
 
    return (
       <Container px="md" fluid={true}>
@@ -126,6 +149,7 @@ const TeamPage = () => {
                            setSearchValue('')
                            setDepartmentValue(ALL_DEPARTMENTS_VALUE)
                            setStatusValue(ALL_STATUSES_VALUE)
+                           setPageSizeValue('10')
                         }}
                      >
                         Сбросить
@@ -164,7 +188,7 @@ const TeamPage = () => {
                      <div>
                         <Text fw={600}>Список сотрудников</Text>
                         <Text size="sm" c="dimmed">
-                           Найдено: {filteredEmployees.length}
+                           Найдено: {filteredEmployees.length}, показано: {paginatedEmployees.length}
                         </Text>
                      </div>
                   </Group>
@@ -198,7 +222,7 @@ const TeamPage = () => {
                            </Table.Tr>
                         </Table.Thead>
                         <Table.Tbody>
-                           {filteredEmployees.map((employee) => {
+                           {paginatedEmployees.map((employee) => {
                               const fullName = `${employee.firstName} ${employee.lastName}`
 
                               return (
@@ -277,6 +301,28 @@ const TeamPage = () => {
                         </Table.Tbody>
                      </Table>
                   </ScrollArea>
+
+                  <Group
+                     px="lg"
+                     py="md"
+                     wrap="wrap"
+                     justify="space-between"
+                     style={{ borderTop: '1px solid var(--mantine-color-dark-4)' }}
+                  >
+                     <Text size="sm" c="dimmed">
+                        Страница {page} из {totalPages}
+                     </Text>
+                     <Group wrap="wrap">
+                        <Select
+                           w={170}
+                           value={pageSizeValue}
+                           data={PAGE_SIZE_OPTIONS}
+                           onChange={setPageSizeValue}
+                           aria-label="Количество строк на странице"
+                        />
+                        <Pagination value={page} total={totalPages} onChange={setPage} />
+                     </Group>
+                  </Group>
                </Stack>
             </Paper>
          </Stack>
