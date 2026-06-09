@@ -1,13 +1,19 @@
 type EmployeeStatus = 'active' | 'invited' | 'vacation'
 
+type EmployeePosition =
+   | 'Инженер'
+   | 'Диспетчер'
+   | 'Менеджер'
+   | 'Бухгалтер'
+   | 'Руководитель'
+
 type EmployeeRecord = {
    id: string
    email: string
    firstName: string
    lastName: string
-   position: string
+   position: EmployeePosition
    createdAt: string
-   department: string
    status: EmployeeStatus
 }
 
@@ -23,9 +29,8 @@ const employees: EmployeeRecord[] = [
       email: 'i.petrov@company.dev',
       firstName: 'Иван',
       lastName: 'Петров',
-      position: 'Системный администратор',
+      position: 'Руководитель',
       createdAt: '2026-01-12T10:00:00.000Z',
-      department: 'Платформа',
       status: 'active',
    },
    {
@@ -33,9 +38,8 @@ const employees: EmployeeRecord[] = [
       email: 'a.smirnova@company.dev',
       firstName: 'Анна',
       lastName: 'Смирнова',
-      position: 'HR BP',
+      position: 'Бухгалтер',
       createdAt: '2026-02-04T10:00:00.000Z',
-      department: 'People Ops',
       status: 'active',
    },
    {
@@ -43,9 +47,8 @@ const employees: EmployeeRecord[] = [
       email: 'm.orlov@company.dev',
       firstName: 'Максим',
       lastName: 'Орлов',
-      position: 'Руководитель продаж',
+      position: 'Менеджер',
       createdAt: '2026-02-18T10:00:00.000Z',
-      department: 'Sales',
       status: 'vacation',
    },
    {
@@ -53,9 +56,8 @@ const employees: EmployeeRecord[] = [
       email: 'e.kuznetsova@company.dev',
       firstName: 'Елена',
       lastName: 'Кузнецова',
-      position: 'Финансовый контролёр',
+      position: 'Бухгалтер',
       createdAt: '2026-03-02T10:00:00.000Z',
-      department: 'Finance',
       status: 'active',
    },
    {
@@ -63,9 +65,8 @@ const employees: EmployeeRecord[] = [
       email: 'd.volkov@company.dev',
       firstName: 'Дмитрий',
       lastName: 'Волков',
-      position: 'Операционный менеджер',
+      position: 'Менеджер',
       createdAt: '2026-03-20T10:00:00.000Z',
-      department: 'Operations',
       status: 'invited',
    },
    {
@@ -73,9 +74,8 @@ const employees: EmployeeRecord[] = [
       email: 'k.ivanova@company.dev',
       firstName: 'Ксения',
       lastName: 'Иванова',
-      position: 'Backend engineer',
+      position: 'Инженер',
       createdAt: '2026-04-08T10:00:00.000Z',
-      department: 'Платформа',
       status: 'active',
    },
    {
@@ -83,9 +83,8 @@ const employees: EmployeeRecord[] = [
       email: 'p.sokolov@company.dev',
       firstName: 'Павел',
       lastName: 'Соколов',
-      position: 'Frontend engineer',
+      position: 'Инженер',
       createdAt: '2026-04-14T10:00:00.000Z',
-      department: 'Платформа',
       status: 'active',
    },
    {
@@ -93,9 +92,8 @@ const employees: EmployeeRecord[] = [
       email: 'o.lebedeva@company.dev',
       firstName: 'Ольга',
       lastName: 'Лебедева',
-      position: 'Product manager',
+      position: 'Менеджер',
       createdAt: '2026-04-17T10:00:00.000Z',
-      department: 'Product',
       status: 'active',
    },
    {
@@ -103,9 +101,8 @@ const employees: EmployeeRecord[] = [
       email: 's.romanov@company.dev',
       firstName: 'Сергей',
       lastName: 'Романов',
-      position: 'DevOps engineer',
+      position: 'Инженер',
       createdAt: '2026-04-22T10:00:00.000Z',
-      department: 'Платформа',
       status: 'vacation',
    },
    {
@@ -113,9 +110,8 @@ const employees: EmployeeRecord[] = [
       email: 'n.fedorova@company.dev',
       firstName: 'Наталья',
       lastName: 'Фёдорова',
-      position: 'Recruiter',
+      position: 'Диспетчер',
       createdAt: '2026-04-29T10:00:00.000Z',
-      department: 'People Ops',
       status: 'active',
    },
    {
@@ -123,9 +119,8 @@ const employees: EmployeeRecord[] = [
       email: 'a.kozlov@company.dev',
       firstName: 'Артём',
       lastName: 'Козлов',
-      position: 'QA engineer',
+      position: 'Инженер',
       createdAt: '2026-05-03T10:00:00.000Z',
-      department: 'Платформа',
       status: 'invited',
    },
    {
@@ -133,9 +128,8 @@ const employees: EmployeeRecord[] = [
       email: 't.egorova@company.dev',
       firstName: 'Татьяна',
       lastName: 'Егорова',
-      position: 'Главный бухгалтер',
+      position: 'Бухгалтер',
       createdAt: '2026-05-06T10:00:00.000Z',
-      department: 'Finance',
       status: 'active',
    },
    {
@@ -143,9 +137,8 @@ const employees: EmployeeRecord[] = [
       email: 'v.novikov@company.dev',
       firstName: 'Виктор',
       lastName: 'Новиков',
-      position: 'Аккаунт-менеджер',
+      position: 'Менеджер',
       createdAt: '2026-05-10T10:00:00.000Z',
-      department: 'Sales',
       status: 'active',
    },
    {
@@ -153,9 +146,8 @@ const employees: EmployeeRecord[] = [
       email: 'm.belyaeva@company.dev',
       firstName: 'Мария',
       lastName: 'Беляева',
-      position: 'Office manager',
+      position: 'Диспетчер',
       createdAt: '2026-05-14T10:00:00.000Z',
-      department: 'Operations',
       status: 'active',
    },
    {
@@ -163,9 +155,8 @@ const employees: EmployeeRecord[] = [
       email: 'r.zaitsev@company.dev',
       firstName: 'Руслан',
       lastName: 'Зайцев',
-      position: 'Data analyst',
+      position: 'Инженер',
       createdAt: '2026-05-18T10:00:00.000Z',
-      department: 'Analytics',
       status: 'active',
    },
    {
@@ -173,9 +164,8 @@ const employees: EmployeeRecord[] = [
       email: 'y.morozova@company.dev',
       firstName: 'Юлия',
       lastName: 'Морозова',
-      position: 'UX designer',
+      position: 'Менеджер',
       createdAt: '2026-05-21T10:00:00.000Z',
-      department: 'Product',
       status: 'vacation',
    },
    {
@@ -183,9 +173,8 @@ const employees: EmployeeRecord[] = [
       email: 'g.pavlov@company.dev',
       firstName: 'Георгий',
       lastName: 'Павлов',
-      position: 'Support lead',
+      position: 'Руководитель',
       createdAt: '2026-05-24T10:00:00.000Z',
-      department: 'Support',
       status: 'active',
    },
    {
@@ -193,9 +182,8 @@ const employees: EmployeeRecord[] = [
       email: 'l.tarasova@company.dev',
       firstName: 'Людмила',
       lastName: 'Тарасова',
-      position: 'Юрист',
+      position: 'Диспетчер',
       createdAt: '2026-05-28T10:00:00.000Z',
-      department: 'Legal',
       status: 'active',
    },
    {
@@ -203,9 +191,8 @@ const employees: EmployeeRecord[] = [
       email: 'i.melnik@company.dev',
       firstName: 'Игорь',
       lastName: 'Мельник',
-      position: 'Security engineer',
+      position: 'Инженер',
       createdAt: '2026-06-01T10:00:00.000Z',
-      department: 'Security',
       status: 'invited',
    },
    {
@@ -213,9 +200,8 @@ const employees: EmployeeRecord[] = [
       email: 'e.gromova@company.dev',
       firstName: 'Евгения',
       lastName: 'Громова',
-      position: 'Content manager',
+      position: 'Менеджер',
       createdAt: '2026-06-03T10:00:00.000Z',
-      department: 'Marketing',
       status: 'active',
    },
    {
@@ -223,12 +209,11 @@ const employees: EmployeeRecord[] = [
       email: 'n.karpov@company.dev',
       firstName: 'Никита',
       lastName: 'Карпов',
-      position: 'Business analyst',
+      position: 'Инженер',
       createdAt: '2026-06-06T10:00:00.000Z',
-      department: 'Analytics',
       status: 'active',
    },
 ]
 
 export { employees, employeeStatusLabels }
-export type { EmployeeRecord, EmployeeStatus }
+export type { EmployeeRecord, EmployeeStatus, EmployeePosition }

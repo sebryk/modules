@@ -25,16 +25,20 @@ import {
    Trash2Icon,
 } from 'lucide-react'
 
-import { employeeStatusLabels, employees } from '@/shared/mocks/employees'
+import {
+   employeeStatusLabels,
+   employees,
+   type EmployeePosition,
+} from '@/shared/mocks/employees'
 
-const ALL_DEPARTMENTS_VALUE = 'all-departments'
+const ALL_POSITIONS_VALUE = 'all-positions'
 const ALL_STATUSES_VALUE = 'all-statuses'
 
-const departmentOptions = [
-   { value: ALL_DEPARTMENTS_VALUE, label: 'Все отделы' },
-   ...Array.from(new Set(employees.map((employee) => employee.department))).map((department) => ({
-      value: department,
-      label: department,
+const positionOptions = [
+   { value: ALL_POSITIONS_VALUE, label: 'Все должности' },
+   ...Array.from(new Set(employees.map((employee) => employee.position))).map((position) => ({
+      value: position,
+      label: position,
    })),
 ]
 
@@ -58,6 +62,14 @@ const getStatusColor = (status: keyof typeof employeeStatusLabels) => {
    return 'blue'
 }
 
+const positionColors: Record<EmployeePosition, string> = {
+   Инженер: 'blue',
+   Диспетчер: 'orange',
+   Менеджер: 'grape',
+   Бухгалтер: 'teal',
+   Руководитель: 'red',
+}
+
 const formatCreatedAt = (value: string) =>
    new Intl.DateTimeFormat('ru-RU', {
       day: '2-digit',
@@ -68,7 +80,6 @@ const formatCreatedAt = (value: string) =>
 const TABLE_COLUMN_WIDTHS = {
    employee: 260,
    position: 220,
-   department: 160,
    email: 240,
    status: 140,
    createdAt: 170,
@@ -83,9 +94,7 @@ const PAGE_SIZE_OPTIONS = [
 
 const TeamPage = () => {
    const [searchValue, setSearchValue] = useState('')
-   const [departmentValue, setDepartmentValue] = useState<string | null>(
-      ALL_DEPARTMENTS_VALUE,
-   )
+   const [positionValue, setPositionValue] = useState<string | null>(ALL_POSITIONS_VALUE)
    const [statusValue, setStatusValue] = useState<string | null>(ALL_STATUSES_VALUE)
    const [page, setPage] = useState(1)
    const [pageSizeValue, setPageSizeValue] = useState<string | null>('10')
@@ -99,14 +108,14 @@ const TeamPage = () => {
          fullName.includes(normalizedSearch) ||
          employee.email.toLowerCase().includes(normalizedSearch) ||
          employee.position.toLowerCase().includes(normalizedSearch)
-      const matchesDepartment =
-         !departmentValue ||
-         departmentValue === ALL_DEPARTMENTS_VALUE ||
-         employee.department === departmentValue
+      const matchesPosition =
+         !positionValue ||
+         positionValue === ALL_POSITIONS_VALUE ||
+         employee.position === positionValue
       const matchesStatus =
          !statusValue || statusValue === ALL_STATUSES_VALUE || employee.status === statusValue
 
-      return matchesSearch && matchesDepartment && matchesStatus
+      return matchesSearch && matchesPosition && matchesStatus
    })
 
    const pageSize = Number(pageSizeValue ?? '10')
@@ -115,7 +124,7 @@ const TeamPage = () => {
 
    useEffect(() => {
       setPage(1)
-   }, [searchValue, departmentValue, statusValue, pageSize])
+   }, [searchValue, positionValue, statusValue, pageSize])
 
    useEffect(() => {
       if (page > totalPages) {
@@ -147,7 +156,7 @@ const TeamPage = () => {
                         variant="default"
                         onClick={() => {
                            setSearchValue('')
-                           setDepartmentValue(ALL_DEPARTMENTS_VALUE)
+                           setPositionValue(ALL_POSITIONS_VALUE)
                            setStatusValue(ALL_STATUSES_VALUE)
                            setPageSizeValue('10')
                         }}
@@ -167,10 +176,10 @@ const TeamPage = () => {
                         }}
                      />
                      <Select
-                        label="Отдел"
-                        value={departmentValue}
-                        data={departmentOptions}
-                        onChange={setDepartmentValue}
+                        label="Должность"
+                        value={positionValue}
+                        data={positionOptions}
+                        onChange={setPositionValue}
                      />
                      <Select
                         label="Статус"
@@ -195,7 +204,7 @@ const TeamPage = () => {
 
                   <ScrollArea>
                      <Table
-                        miw={1254}
+                        miw={1094}
                         verticalSpacing="md"
                         horizontalSpacing="lg"
                         highlightOnHover={true}
@@ -204,7 +213,6 @@ const TeamPage = () => {
                         <colgroup>
                            <col style={{ width: TABLE_COLUMN_WIDTHS.employee }} />
                            <col style={{ width: TABLE_COLUMN_WIDTHS.position }} />
-                           <col style={{ width: TABLE_COLUMN_WIDTHS.department }} />
                            <col style={{ width: TABLE_COLUMN_WIDTHS.email }} />
                            <col style={{ width: TABLE_COLUMN_WIDTHS.status }} />
                            <col style={{ width: TABLE_COLUMN_WIDTHS.createdAt }} />
@@ -214,7 +222,6 @@ const TeamPage = () => {
                            <Table.Tr>
                               <Table.Th>Сотрудник</Table.Th>
                               <Table.Th>Должность</Table.Th>
-                              <Table.Th>Отдел</Table.Th>
                               <Table.Th>Email</Table.Th>
                               <Table.Th>Статус</Table.Th>
                               <Table.Th>Создан</Table.Th>
@@ -244,12 +251,12 @@ const TeamPage = () => {
                                        </Group>
                                     </Table.Td>
                                     <Table.Td>
-                                       <Text size="sm" truncate={true}>
+                                       <Badge
+                                          variant="light"
+                                          color={positionColors[employee.position]}
+                                       >
                                           {employee.position}
-                                       </Text>
-                                    </Table.Td>
-                                    <Table.Td>
-                                       <Badge variant="light">{employee.department}</Badge>
+                                       </Badge>
                                     </Table.Td>
                                     <Table.Td>
                                        <Text size="sm" truncate={true}>
