@@ -1,7 +1,9 @@
 import { Route, Routes } from 'react-router'
 
+import { PermissionRoute } from '@/app/guards/permission-route'
 import { ProtectedRoute } from '@/app/guards/protected-route'
 import { PublicRoute } from '@/app/guards/public-route'
+import { USER_READ_PERMISSION } from '@/entities/user'
 import { ApplicationsPage } from '@/pages/applications'
 import { Dashboard } from '@/pages/dashboard'
 import { LoginPage } from '@/pages/login'
@@ -29,7 +31,14 @@ const AppRouter = () => {
          >
             <Route index={true} element={<Dashboard />} />
             <Route path={ROUTES.applications} element={<ApplicationsPage />} />
-            <Route path={ROUTES.team} element={<TeamPage />} />
+            <Route
+               path={ROUTES.team}
+               element={
+                  <PermissionRoute permission={USER_READ_PERMISSION}>
+                     <TeamPage />
+                  </PermissionRoute>
+               }
+            />
          </Route>
       </Routes>
    )

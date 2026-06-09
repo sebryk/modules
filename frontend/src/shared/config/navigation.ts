@@ -9,6 +9,7 @@ type AppRouteItem = {
    to: string
    icon: ComponentType<LucideProps>
    end?: boolean
+   permission?: string
 }
 
 const appRoutes: AppRouteItem[] = [
@@ -24,16 +25,17 @@ const appRoutes: AppRouteItem[] = [
       icon: FolderIcon,
    },
    {
-      title: 'Команда',
+      title: 'Сотрудники',
       to: ROUTES.team,
       icon: UsersIcon,
+      permission: 'user:read',
    },
 ]
 
 const routeTitles: Record<string, string> = {
    '/': 'Dashboard',
    '/applications': 'Заявки',
-   '/team': 'Команда',
+   '/team': 'Сотрудники',
 }
 
 export { appRoutes, routeTitles }
