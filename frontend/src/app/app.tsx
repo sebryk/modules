@@ -4,7 +4,6 @@ import { useBootstrapSession } from '@/entities/session'
 
 const App = () => {
    useBootstrapSession()
-
    return (
       <RootLayout>
          <AppRouter />
@@ -13,3 +12,5 @@ const App = () => {
 }
 
 export default App
+
+

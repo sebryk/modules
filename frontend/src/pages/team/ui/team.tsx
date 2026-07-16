@@ -112,11 +112,7 @@ const PAGE_SIZE_OPTIONS = [
 const TABLE_SECTION_BACKGROUND_COLOR =
    'light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-7))'
 
-const sortEmployees = (
-   data: EmployeeRecord[],
-   sortBy: SortBy,
-   reversed: boolean,
-) => {
+const sortEmployees = (data: EmployeeRecord[], sortBy: SortBy, reversed: boolean) => {
    const sortedData = [...data].sort((left, right) => {
       if (sortBy === 'name') {
          const leftName = `${left.firstName} ${left.lastName}`
@@ -154,12 +150,7 @@ type SortableHeaderProps = {
    onSort: () => void
 }
 
-const SortableHeader = ({
-   children,
-   reversed,
-   sorted,
-   onSort,
-}: SortableHeaderProps) => (
+const SortableHeader = ({ children, reversed, sorted, onSort }: SortableHeaderProps) => (
    <UnstyledButton onClick={onSort} className={classes['team-page__sort-button']}>
       <Group wrap="nowrap" justify="space-between">
          <Text fw={600} size="sm" className={classes['team-page__sort-button-label']}>
@@ -231,11 +222,10 @@ const TeamPage = () => {
    }, [page, totalPages])
 
    return (
-      <Container px="md" fluid={true} bg='var(--mantine-color-dark-7)'>
+      <Container py="xs" fluid={true} bg="var(--mantine-color-dark-8)">
          <Stack gap="lg">
             <Stack gap={4}>
                <Title order={2}>Сотрудники</Title>
-            
             </Stack>
 
             <Paper p="lg" radius="lg" shadow="sm" withBorder={true}>
@@ -388,9 +378,8 @@ const TeamPage = () => {
                                     </Table.Td>
                                     <Table.Td>
                                        <Badge
-
                                           radius="sm"
-                                          fw='initial'
+                                          fw="initial"
                                           variant="light"
                                           color={positionColors[employee.position]}
                                        >
@@ -404,7 +393,11 @@ const TeamPage = () => {
                                     </Table.Td>
                                     <Table.Td>
                                        <Group gap="xs" wrap="nowrap">
-                                          <Text lh={1} size="lg" c={getStatusColor(employee.status)}>
+                                          <Text
+                                             lh={1}
+                                             size="lg"
+                                             c={getStatusColor(employee.status)}
+                                          >
                                              •
                                           </Text>
                                           <Text size="sm">
@@ -417,11 +410,7 @@ const TeamPage = () => {
                                     </Table.Td>
                                     <Table.Td>
                                        <Group justify="flex-end">
-                                          <Menu
-                                             width={180}
-                                             shadow="md"
-                                             position="bottom-end"
-                                          >
+                                          <Menu width={180} shadow="md" position="bottom-end">
                                              <Menu.Target>
                                                 <ActionIcon
                                                    color="gray"
@@ -464,7 +453,8 @@ const TeamPage = () => {
                      }}
                   >
                      <Text size="sm" c="dimmed">
-                        Показано {paginatedEmployees.length} из {filteredEmployees.length} сотрудников
+                        Показано {paginatedEmployees.length} из {filteredEmployees.length}{' '}
+                        сотрудников
                      </Text>
                      <Group wrap="wrap">
                         <Select

@@ -1,4 +1,5 @@
 import { AppShell, NavLink, ScrollArea, Stack, ThemeIcon } from '@mantine/core'
+import { useDisclosure } from '@mantine/hooks'
 import { ChevronRightIcon } from 'lucide-react'
 import { Outlet, useLocation, useNavigate } from 'react-router'
 
@@ -11,6 +12,10 @@ const RootLayout = () => {
    const location = useLocation()
    const navigate = useNavigate()
    const currentUserQuery = useCurrentUser()
+   const [
+      mobileOpened,
+      // { toggle: toggleMobile }
+   ] = useDisclosure(false)
 
    const availableRoutes = appRoutes.filter(
       (route) => !route.permission || hasPermission(currentUserQuery.data, route.permission),
@@ -22,9 +27,11 @@ const RootLayout = () => {
          navbar={{
             width: 300,
             breakpoint: 'sm',
+            collapsed: { mobile: !mobileOpened },
          }}
       >
-         <AppShell.Navbar pt="xs" pb="sm" px="xs">
+         {/* <Burger size="sm" hiddenFrom="sm" opened={mobileOpened} onClick={toggleMobile} /> */}
+         <AppShell.Navbar pt="xs" pb="sm" px="xs" withBorder={false}>
             <AppShell.Section grow={true} component={ScrollArea}>
                <Stack gap="xs">
                   {availableRoutes.map((route) => {
@@ -64,7 +71,7 @@ const RootLayout = () => {
             </AppShell.Section>
          </AppShell.Navbar>
 
-         <AppShell.Main>
+         <AppShell.Main bg="var(--mantine-color-dark-8)">
             <Outlet />
          </AppShell.Main>
       </AppShell>
