@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 
-import { AuthenticatedRequest } from '../../common/types/api'
+import type { AuthenticatedRequest } from '../../common/types/api'
 import { PermissionsService } from '../../rbac/permissions.service'
 import { PERMISSION_KEY } from '../auth.constants'
 

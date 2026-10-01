@@ -5,7 +5,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt'
 import type { FastifyRequest } from 'fastify'
 
 import { getRefreshTokenCookie } from '../auth-cookie'
-import { JwtPayload } from '../auth.types'
+import type { JwtPayload } from '../auth.types'
 
 @Injectable()
 export class RefreshJwtStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {

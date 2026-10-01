@@ -1,21 +1,11 @@
-# React + TypeScript + Vite + shadcn/ui
+# Frontend
 
-This is a template for a new Vite project with React, TypeScript, and shadcn/ui.
-
-## Adding components
-
-To add components to your app, run the following command:
+React, TypeScript и Vite. Требуется Bun 1.4.2.
 
 ```bash
-npx shadcn@latest add button
+cd frontend
+bun install --frozen-lockfile
+bun run dev
 ```
 
-This will place the ui components in the `src/components` directory.
-
-## Using components
-
-To use the components in your app, import them as follows:
-
-```tsx
-import { Button } from "@mantine/core"
-```
+Проверки и сборка: `bun run lint`, `bun run typecheck`, `bun run build`.

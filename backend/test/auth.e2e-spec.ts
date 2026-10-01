@@ -179,13 +179,15 @@ describe('Auth RBAC', () => {
 
       expect(response.statusCode).toBe(200)
       expect(response.json()).toEqual({
-         id: 'user-1',
-         email: 'admin@example.com',
-         firstName: 'System',
-         lastName: 'Administrator',
-         position: 'Administrator',
-         createdAt: '2024-01-01T00:00:00.000Z',
-         permissions: ['application:create', 'application:read'],
+         data: {
+            id: 'user-1',
+            email: 'admin@example.com',
+            firstName: 'System',
+            lastName: 'Administrator',
+            position: 'Administrator',
+            createdAt: '2024-01-01T00:00:00.000Z',
+            permissions: ['application:create', 'application:read'],
+         },
       })
    })
 

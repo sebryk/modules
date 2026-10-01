@@ -126,7 +126,7 @@ export default [
          'dist/**',
          'node_modules/',
          'package-lock.json',
-         'yarn.lock',
+         'bun.lock',
          'gatsby-**.js',
          'out/**',
       ],

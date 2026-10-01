@@ -1,7 +1,7 @@
 node_modules
 dist
 .env
-yarn.lock
+bun.lock
 *.tsbuildinfo
 prisma.config.js
 prisma.config.js.map

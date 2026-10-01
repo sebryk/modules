@@ -1,0 +1,3 @@
+[install]
+# A clean Bun install cannot resolve cross-env in argon2's install script.
+ignoreScripts = true

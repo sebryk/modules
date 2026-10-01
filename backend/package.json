@@ -4,18 +4,19 @@
    "private": true,
    "main": "dist/main.js",
    "license": "MIT",
+   "packageManager": "bun@1.4.2",
    "scripts": {
       "build": "tsc -p tsconfig.build.json",
       "format": "prettier . --write",
       "format:check": "prettier . --check",
       "lint": "eslint .",
       "lint:fix": "eslint . --fix",
-      "start": "node dist/main.js",
-      "start:dev": "ts-node -r tsconfig-paths/register src/main.ts",
+      "start": "bun dist/main.js",
+      "start:dev": "bun --watch src/main.ts",
       "test": "jest --runInBand",
       "prisma:generate": "prisma generate",
       "prisma:migrate:dev": "prisma migrate dev",
-      "prisma:seed": "ts-node -r tsconfig-paths/register prisma/seed.ts"
+      "prisma:seed": "bun prisma/seed.ts"
    },
    "dependencies": {
       "@fastify/cookie": "^11.0.2",
@@ -54,8 +55,6 @@
       "prisma": "^7.8.0",
       "supertest": "^7.2.2",
       "ts-jest": "^29.4.9",
-      "ts-node": "^10.9.2",
-      "tsconfig-paths": "^4.2.0",
       "typescript": "^6.0.3",
       "typescript-eslint": "^8.59.1"
    }

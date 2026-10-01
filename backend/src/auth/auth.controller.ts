@@ -17,7 +17,7 @@ import { AuthService } from './auth.service'
 import { LoginDto } from './dto/login.dto'
 import { RefreshJwtGuard } from './guards/refresh-jwt.guard'
 import type { AuthTokens, Me } from './auth.types'
-import { AuthenticatedRequest } from '../common/types/api'
+import type { AuthenticatedRequest } from '../common/types/api'
 
 @Controller('auth')
 export class AuthController {
