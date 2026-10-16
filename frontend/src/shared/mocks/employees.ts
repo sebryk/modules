@@ -12,6 +12,7 @@ type EmployeeRecord = {
    email: string
    firstName: string
    lastName: string
+   avatarUrl?: string
    position: EmployeePosition
    createdAt: string
    status: EmployeeStatus

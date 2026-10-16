@@ -9,6 +9,7 @@ import {
    Container,
    Group,
    Menu,
+   Modal,
    Pagination,
    Paper,
    ScrollArea,
@@ -20,6 +21,8 @@ import {
    Title,
    UnstyledButton,
 } from '@mantine/core'
+import { useDisclosure } from '@mantine/hooks'
+import { notifications } from '@mantine/notifications'
 import {
    ChevronsUpDownIcon,
    ChevronDownIcon,
@@ -28,11 +31,13 @@ import {
    PencilIcon,
    SearchIcon,
    Trash2Icon,
+   UserPlusIcon,
 } from 'lucide-react'
+import { Link, useNavigate } from 'react-router'
 
+import { useEmployeesStore } from '@/entities/employee'
 import {
    employeeStatusLabels,
-   employees,
    type EmployeePosition,
    type EmployeeRecord,
    type EmployeeStatus,
@@ -45,9 +50,17 @@ const ALL_STATUSES_VALUE = 'all-statuses'
 
 type SortBy = 'createdAt' | 'email' | 'name' | 'position' | 'status'
 
+const positionValues: EmployeePosition[] = [
+   'Инженер',
+   'Диспетчер',
+   'Менеджер',
+   'Бухгалтер',
+   'Руководитель',
+]
+
 const positionOptions = [
    { value: ALL_POSITIONS_VALUE, label: 'Все должности' },
-   ...Array.from(new Set(employees.map((employee) => employee.position))).map((position) => ({
+   ...positionValues.map((position) => ({
       value: position,
       label: position,
    })),
@@ -172,6 +185,9 @@ const SortableHeader = ({ children, reversed, sorted, onSort }: SortableHeaderPr
 )
 
 const TeamPage = () => {
+   const navigate = useNavigate()
+   const employeeList = useEmployeesStore((state) => state.employees)
+   const removeEmployee = useEmployeesStore((state) => state.removeEmployee)
    const [searchValue, setSearchValue] = useState('')
    const [positionValue, setPositionValue] = useState<string | null>(ALL_POSITIONS_VALUE)
    const [statusValue, setStatusValue] = useState<string | null>(ALL_STATUSES_VALUE)
@@ -179,10 +195,12 @@ const TeamPage = () => {
    const [reverseSortDirection, setReverseSortDirection] = useState(true)
    const [page, setPage] = useState(1)
    const [pageSizeValue, setPageSizeValue] = useState<string | null>('10')
+   const [employeeToDelete, setEmployeeToDelete] = useState<EmployeeRecord | null>(null)
+   const [deleteOpened, { close: closeDelete, open: openDelete }] = useDisclosure(false)
 
    const normalizedSearch = searchValue.trim().toLowerCase()
 
-   const filteredEmployees = employees.filter((employee) => {
+   const filteredEmployees = employeeList.filter((employee) => {
       const fullName = `${employee.firstName} ${employee.lastName}`.toLowerCase()
       const matchesSearch =
          !normalizedSearch ||
@@ -211,6 +229,26 @@ const TeamPage = () => {
       setSortBy(field)
    }
 
+   const requestDelete = (employee: EmployeeRecord) => {
+      setEmployeeToDelete(employee)
+      openDelete()
+   }
+
+   const confirmDelete = () => {
+      if (!employeeToDelete) {
+         return
+      }
+
+      removeEmployee(employeeToDelete.id)
+      closeDelete()
+      setEmployeeToDelete(null)
+      notifications.show({
+         title: 'Сотрудник удалён',
+         message: `${employeeToDelete.firstName} ${employeeToDelete.lastName} удалён из списка`,
+         color: 'green',
+      })
+   }
+
    useEffect(() => {
       setPage(1)
    }, [searchValue, positionValue, statusValue, pageSize])
@@ -224,9 +262,17 @@ const TeamPage = () => {
    return (
       <Container py="xs" fluid={true} bg="var(--mantine-color-dark-8)">
          <Stack gap="lg">
-            <Stack gap={4}>
+            <Group gap="sm" wrap="wrap" align="center" justify="space-between">
                <Title order={2}>Сотрудники</Title>
-            </Stack>
+               <Button
+                  leftSection={<UserPlusIcon size={16} />}
+                  onClick={() => {
+                     navigate('/team/new')
+                  }}
+               >
+                  Добавить сотрудника
+               </Button>
+            </Group>
 
             <Paper p="lg" radius="lg" shadow="sm" withBorder={true}>
                <Stack gap="md">
@@ -367,9 +413,16 @@ const TeamPage = () => {
                                              {employee.lastName[0]}
                                           </Avatar>
                                           <div>
-                                             <Text fw={500} size="sm">
+                                             <Button
+                                                px={0}
+                                                component={Link}
+                                                variant="subtle"
+                                                size="compact-sm"
+                                                to={`/team/${employee.id}`}
+                                                className={classes['team-page__employee-link']}
+                                             >
                                                 {fullName}
-                                             </Text>
+                                             </Button>
                                              <Text size="xs" c="dimmed">
                                                 ID: {employee.id.slice(0, 8)}
                                              </Text>
@@ -422,12 +475,20 @@ const TeamPage = () => {
                                              </Menu.Target>
 
                                              <Menu.Dropdown>
-                                                <Menu.Item leftSection={<PencilIcon size={16} />}>
+                                                <Menu.Item
+                                                   leftSection={<PencilIcon size={16} />}
+                                                   onClick={() => {
+                                                      navigate(`/team/${employee.id}`)
+                                                   }}
+                                                >
                                                    Редактировать
                                                 </Menu.Item>
                                                 <Menu.Item
                                                    color="red"
                                                    leftSection={<Trash2Icon size={16} />}
+                                                   onClick={() => {
+                                                      requestDelete(employee)
+                                                   }}
                                                 >
                                                    Удалить
                                                 </Menu.Item>
@@ -470,6 +531,40 @@ const TeamPage = () => {
                </Stack>
             </Paper>
          </Stack>
+
+         <Modal
+            centered={true}
+            opened={deleteOpened}
+            title="Удалить сотрудника?"
+            onClose={() => {
+               closeDelete()
+               setEmployeeToDelete(null)
+            }}
+         >
+            <Stack gap="md">
+               <Text size="sm" c="dimmed">
+                  Запись{' '}
+                  {employeeToDelete
+                     ? `${employeeToDelete.firstName} ${employeeToDelete.lastName}`
+                     : ''}{' '}
+                  будет удалена из локального списка. Это действие нельзя отменить.
+               </Text>
+               <Group justify="flex-end">
+                  <Button
+                     variant="default"
+                     onClick={() => {
+                        closeDelete()
+                        setEmployeeToDelete(null)
+                     }}
+                  >
+                     Отмена
+                  </Button>
+                  <Button color="red" onClick={confirmDelete}>
+                     Удалить
+                  </Button>
+               </Group>
+            </Stack>
+         </Modal>
       </Container>
    )
 }

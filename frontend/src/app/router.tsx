@@ -6,6 +6,7 @@ import { PublicRoute } from '@/app/guards/public-route'
 import { USER_READ_PERMISSION } from '@/entities/user'
 import { ApplicationsPage } from '@/pages/applications'
 import { Dashboard } from '@/pages/dashboard'
+import { EmployeePage } from '@/pages/employee'
 import { LoginPage } from '@/pages/login'
 import { TeamPage } from '@/pages/team'
 import { ROUTES } from '@/shared/config/routes'
@@ -36,6 +37,14 @@ const AppRouter = () => {
                element={
                   <PermissionRoute permission={USER_READ_PERMISSION}>
                      <TeamPage />
+                  </PermissionRoute>
+               }
+            />
+            <Route
+               path={ROUTES.employee}
+               element={
+                  <PermissionRoute permission={USER_READ_PERMISSION}>
+                     <EmployeePage />
                   </PermissionRoute>
                }
             />

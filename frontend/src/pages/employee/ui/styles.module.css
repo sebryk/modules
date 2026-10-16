@@ -1,0 +1,7 @@
+.employee-page__breadcrumbs {
+   color: var(--mantine-color-dimmed);
+}
+
+.employee-page__muted-icon {
+   color: var(--mantine-color-dimmed);
+}
