@@ -150,6 +150,8 @@ describe('Auth RBAC', () => {
                   firstName: 'System',
                   lastName: 'Administrator',
                   position: 'Administrator',
+                  status: 'active',
+                  avatarUrl: null,
                   createdAt: new Date('2024-01-01T00:00:00.000Z'),
                }
             }
@@ -185,8 +187,23 @@ describe('Auth RBAC', () => {
             firstName: 'System',
             lastName: 'Administrator',
             position: 'Administrator',
+            status: 'active',
+            avatarUrl: null,
             createdAt: '2024-01-01T00:00:00.000Z',
             permissions: ['application:create', 'application:read'],
+         },
+      })
+      expect(prismaMock.user.findUnique).toHaveBeenLastCalledWith({
+         where: { id: 'user-1' },
+         select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            position: true,
+            status: true,
+            avatarUrl: true,
+            createdAt: true,
          },
       })
    })

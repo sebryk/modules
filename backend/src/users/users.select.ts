@@ -7,6 +7,8 @@ export const userWithRolesSelect = {
    firstName: true,
    lastName: true,
    position: true,
+   status: true,
+   avatarUrl: true,
    createdAt: true,
 } satisfies Prisma.UserSelect
 

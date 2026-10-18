@@ -18,6 +18,8 @@ const TARGET_USER_ID = '55555555-5555-4555-8555-555555555555'
 const buildPrismaMock = () => ({
    user: {
       findUnique: jest.fn(),
+      findMany: jest.fn().mockResolvedValue([]),
+      count: jest.fn().mockResolvedValue(0),
       create: jest.fn(),
       update: jest.fn(),
    },
@@ -62,6 +64,8 @@ describe('Users management', () => {
       lastName: string
       position: string
       passwordHash: string
+      status?: string
+      avatarUrl?: string | null
    } | null
 
    beforeAll(() => {
@@ -120,98 +124,387 @@ describe('Users management', () => {
          },
       )
 
-   it('creates a user with assigned roles', async () => {
-      prismaMock.permission.findMany.mockResolvedValue(buildPermissions(['user:create']))
-      prismaMock.user.findUnique.mockResolvedValue(null)
-      prismaMock.role.findMany.mockResolvedValue([
+   it('returns the first page with default pagination and safe user fields', async () => {
+      prismaMock.permission.findMany.mockResolvedValue(buildPermissions(['user:read']))
+      prismaMock.user.findMany.mockResolvedValue([
          {
-            id: USER_ROLE_ID,
-            name: 'manager',
+            id: TARGET_USER_ID,
+            email: 'ivan@example.com',
+            firstName: 'Иван',
+            lastName: 'Петров',
+            position: 'Инженер',
+            status: 'active',
+            avatarUrl: null,
+            createdAt: new Date('2026-01-01T00:00:00.000Z'),
          },
       ])
-      prismaMock.user.create.mockImplementation(
-         ({
-            data,
-         }: {
-            data: {
-               email: string
-               firstName: string
-               lastName: string
-               position: string
-               passwordHash: string
-            }
-         }) => {
-            createdUserData = data
+      prismaMock.user.count.mockResolvedValue(21)
 
-            return {
+      const response = await app.inject({
+         method: 'GET',
+         url: '/users',
+         headers: { authorization: `Bearer ${await createAccessToken()}` },
+      })
+
+      expect(response.statusCode).toBe(200)
+      expect(response.json()).toEqual({
+         data: [
+            {
+               id: TARGET_USER_ID,
+               email: 'ivan@example.com',
+               firstName: 'Иван',
+               lastName: 'Петров',
+               position: 'Инженер',
+               status: 'active',
+               avatarUrl: null,
+               createdAt: '2026-01-01T00:00:00.000Z',
+            },
+         ],
+         meta: { page: 1, pageSize: 10, total: 21, totalPages: 3 },
+      })
+      expect(prismaMock.user.findMany).toHaveBeenCalledWith({
+         where: {},
+         select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            position: true,
+            status: true,
+            avatarUrl: true,
+            createdAt: true,
+         },
+         orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
+         skip: 0,
+         take: 10,
+      })
+      expect(prismaMock.user.count).toHaveBeenCalledWith({ where: {} })
+   })
+
+   it('combines search, exact filters, sorting, includes and pagination', async () => {
+      prismaMock.permission.findMany.mockResolvedValue(buildPermissions(['user:read']))
+      prismaMock.user.count.mockResolvedValue(6)
+      const query = new URLSearchParams({
+         search: '  Иван   Петров  ',
+         position: 'Инженер',
+         status: 'vacation',
+         sortBy: 'name',
+         sortOrder: 'asc',
+         page: '2',
+         pageSize: '5',
+         include: 'role-assignment',
+      })
+
+      const response = await app.inject({
+         method: 'GET',
+         url: `/users?${query.toString()}`,
+         headers: { authorization: `Bearer ${await createAccessToken()}` },
+      })
+
+      expect(response.statusCode).toBe(200)
+      expect(response.json()).toEqual({
+         data: [],
+         meta: { page: 2, pageSize: 5, total: 6, totalPages: 2 },
+      })
+      const where = {
+         position: 'Инженер',
+         status: 'vacation',
+         AND: [
+            {
+               OR: [
+                  { firstName: { contains: 'Иван', mode: 'insensitive' } },
+                  { lastName: { contains: 'Иван', mode: 'insensitive' } },
+                  { email: { contains: 'Иван', mode: 'insensitive' } },
+                  { position: { contains: 'Иван', mode: 'insensitive' } },
+               ],
+            },
+            {
+               OR: [
+                  { firstName: { contains: 'Петров', mode: 'insensitive' } },
+                  { lastName: { contains: 'Петров', mode: 'insensitive' } },
+                  { email: { contains: 'Петров', mode: 'insensitive' } },
+                  { position: { contains: 'Петров', mode: 'insensitive' } },
+               ],
+            },
+         ],
+      }
+      expect(prismaMock.user.findMany).toHaveBeenCalledWith(
+         expect.objectContaining({
+            where,
+            orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }, { id: 'asc' }],
+            skip: 5,
+            take: 5,
+         }),
+      )
+      expect(prismaMock.user.findMany.mock.calls).toHaveProperty(
+         '0.0.select.roleAssignments.select.role.select',
+         { id: true, name: true, description: true, isSystem: true },
+      )
+      expect(prismaMock.user.count).toHaveBeenCalledWith({ where })
+   })
+
+   it.each([
+      'page=0',
+      'page=-1',
+      'page=1.5',
+      'page=abc',
+      'page=',
+      'pageSize=0',
+      'pageSize=101',
+      'pageSize=2.5',
+      'pageSize=abc',
+      'status=unknown',
+      'sortBy=passwordHash',
+      'sortOrder=invalid',
+      'search=a&search=b',
+      'position=a&position=b',
+      'include=a&include=b',
+   ])('returns 400 for invalid list parameters: %s', async (query) => {
+      prismaMock.permission.findMany.mockResolvedValue(buildPermissions(['user:read']))
+
+      const response = await app.inject({
+         method: 'GET',
+         url: `/users?${query}`,
+         headers: { authorization: `Bearer ${await createAccessToken()}` },
+      })
+
+      expect(response.statusCode).toBe(400)
+      expect(prismaMock.user.findMany).not.toHaveBeenCalled()
+   })
+
+   it('returns empty data and zero pages when there are no matches', async () => {
+      prismaMock.permission.findMany.mockResolvedValue(buildPermissions(['user:read']))
+
+      const response = await app.inject({
+         method: 'GET',
+         url: '/users?page=3',
+         headers: { authorization: `Bearer ${await createAccessToken()}` },
+      })
+
+      expect(response.statusCode).toBe(200)
+      expect(response.json()).toEqual({
+         data: [],
+         meta: { page: 3, pageSize: 10, total: 0, totalPages: 0 },
+      })
+   })
+
+   it.each(['429496731', '4294967297', '9007199254740991'])(
+      'does not query a wrapped Prisma offset for out-of-range page %s',
+      async (page) => {
+         prismaMock.permission.findMany.mockResolvedValue(buildPermissions(['user:read']))
+         prismaMock.user.count.mockResolvedValue(2)
+
+         const response = await app.inject({
+            method: 'GET',
+            url: `/users?page=${page}`,
+            headers: { authorization: `Bearer ${await createAccessToken()}` },
+         })
+
+         expect(response.statusCode).toBe(200)
+         expect(response.json()).toEqual({
+            data: [],
+            meta: { page: Number(page), pageSize: 10, total: 2, totalPages: 1 },
+         })
+         expect(prismaMock.user.findMany).not.toHaveBeenCalled()
+      },
+   )
+
+   it.each([
+      ['john_doe', 'john\\_doe'],
+      ['50%', '50\\%'],
+      ['team\\reports', 'team\\\\reports'],
+   ])('searches for the literal token %s', async (search, contains) => {
+      prismaMock.permission.findMany.mockResolvedValue(buildPermissions(['user:read']))
+      prismaMock.user.count.mockResolvedValue(1)
+      const query = new URLSearchParams({ search })
+
+      const response = await app.inject({
+         method: 'GET',
+         url: `/users?${query.toString()}`,
+         headers: { authorization: `Bearer ${await createAccessToken()}` },
+      })
+
+      expect(response.statusCode).toBe(200)
+      expect(prismaMock.user.findMany.mock.calls).toHaveProperty('0.0.where.AND', [
+         {
+            OR: [
+               { firstName: { contains, mode: 'insensitive' } },
+               { lastName: { contains, mode: 'insensitive' } },
+               { email: { contains, mode: 'insensitive' } },
+               { position: { contains, mode: 'insensitive' } },
+            ],
+         },
+      ])
+   })
+
+   it('returns 401 for a user list without authentication', async () => {
+      const response = await app.inject({ method: 'GET', url: '/users' })
+
+      expect(response.statusCode).toBe(401)
+      expect(prismaMock.user.findMany).not.toHaveBeenCalled()
+   })
+
+   it('returns 403 for a user list without user:read', async () => {
+      prismaMock.permission.findMany.mockResolvedValue(buildPermissions(['user:create']))
+
+      const response = await app.inject({
+         method: 'GET',
+         url: '/users',
+         headers: { authorization: `Bearer ${await createAccessToken()}` },
+      })
+
+      expect(response.statusCode).toBe(403)
+      expect(prismaMock.user.findMany).not.toHaveBeenCalled()
+   })
+
+   it.each([{}, { status: 'invited', avatarUrl: 'https://example.com/avatar.png' }])(
+      'creates a user with assigned roles and profile fields %j',
+      async (fields) => {
+         prismaMock.permission.findMany.mockResolvedValue(buildPermissions(['user:create']))
+         prismaMock.user.findUnique.mockResolvedValue(null)
+         prismaMock.role.findMany.mockResolvedValue([
+            {
+               id: USER_ROLE_ID,
+               name: 'manager',
+            },
+         ])
+         prismaMock.user.create.mockImplementation(
+            ({
+               data,
+            }: {
+               data: {
+                  email: string
+                  firstName: string
+                  lastName: string
+                  position: string
+                  passwordHash: string
+                  status?: string
+                  avatarUrl?: string | null
+               }
+            }) => {
+               createdUserData = data
+
+               return {
+                  id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+                  email: 'new.user@example.com',
+                  firstName: 'New',
+                  lastName: 'User',
+                  position: 'Manager',
+                  status: data.status ?? 'active',
+                  avatarUrl: data.avatarUrl ?? null,
+                  createdAt: new Date('2024-01-01T00:00:00.000Z'),
+               }
+            },
+         )
+         prismaMock.roleAssignment.createMany.mockResolvedValue({
+            count: 1,
+         })
+
+         const accessToken = await createAccessToken()
+         const response = await app.inject({
+            method: 'POST',
+            url: '/users',
+            headers: {
+               authorization: `Bearer ${accessToken}`,
+            },
+            payload: {
+               email: 'new.user@example.com',
+               password: 'ChangeMe123!',
+               firstName: 'New',
+               lastName: 'User',
+               position: 'Manager',
+               roleIds: [USER_ROLE_ID],
+               ...fields,
+            },
+         })
+
+         expect(response.statusCode).toBe(201)
+         expect(JSON.parse(response.body)).toEqual({
+            data: {
                id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
                email: 'new.user@example.com',
                firstName: 'New',
                lastName: 'User',
                position: 'Manager',
-               createdAt: new Date('2024-01-01T00:00:00.000Z'),
-            }
-         },
-      )
-      prismaMock.roleAssignment.createMany.mockResolvedValue({
-         count: 1,
-      })
-
-      const accessToken = await createAccessToken()
-      const response = await app.inject({
-         method: 'POST',
-         url: '/users',
-         headers: {
-            authorization: `Bearer ${accessToken}`,
-         },
-         payload: {
-            email: 'new.user@example.com',
-            password: 'ChangeMe123!',
-            firstName: 'New',
-            lastName: 'User',
-            position: 'Manager',
-            roleIds: [USER_ROLE_ID],
-         },
-      })
-
-      expect(response.statusCode).toBe(201)
-      expect(JSON.parse(response.body)).toEqual({
-         data: {
-            id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
-            email: 'new.user@example.com',
-            firstName: 'New',
-            lastName: 'User',
-            position: 'Manager',
-            createdAt: '2024-01-01T00:00:00.000Z',
-            roleAssignments: [
-               {
-                  grantedBy: ADMIN_ID,
-                  createdAt: '2024-01-01T00:00:00.000Z',
-                  role: {
-                     id: USER_ROLE_ID,
-                     name: 'manager',
+               status: fields.status ?? 'active',
+               avatarUrl: fields.avatarUrl ?? null,
+               createdAt: '2024-01-01T00:00:00.000Z',
+               roleAssignments: [
+                  {
+                     grantedBy: ADMIN_ID,
+                     createdAt: '2024-01-01T00:00:00.000Z',
+                     role: {
+                        id: USER_ROLE_ID,
+                        name: 'manager',
+                     },
                   },
+               ],
+            },
+         })
+         expect(prismaMock.roleAssignment.createMany).toHaveBeenCalledWith({
+            data: [
+               {
+                  userId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+                  roleId: USER_ROLE_ID,
+                  grantedBy: ADMIN_ID,
                },
             ],
-         },
+         })
+         expect(createdUserData).toMatchObject({
+            email: 'new.user@example.com',
+            firstName: 'New',
+            lastName: 'User',
+            position: 'Manager',
+            ...fields,
+         })
+         expect(createdUserData?.passwordHash).toEqual(expect.any(String))
+         expect(createdUserData?.passwordHash).not.toBe('ChangeMe123!')
+      },
+   )
+
+   it.each([
+      ['name', 'asc', [{ firstName: 'asc' }, { lastName: 'asc' }, { id: 'asc' }]],
+      ['name', 'desc', [{ firstName: 'desc' }, { lastName: 'desc' }, { id: 'asc' }]],
+      ['position', 'asc', [{ position: 'asc' }, { id: 'asc' }]],
+      ['position', 'desc', [{ position: 'desc' }, { id: 'asc' }]],
+      ['email', 'asc', [{ email: 'asc' }, { id: 'asc' }]],
+      ['email', 'desc', [{ email: 'desc' }, { id: 'asc' }]],
+      ['status', 'asc', [{ status: 'asc' }, { id: 'asc' }]],
+      ['status', 'desc', [{ status: 'desc' }, { id: 'asc' }]],
+      ['createdAt', 'asc', [{ createdAt: 'asc' }, { id: 'asc' }]],
+      ['createdAt', 'desc', [{ createdAt: 'desc' }, { id: 'asc' }]],
+   ])('sorts users by %s %s with a stable tie breaker', async (sortBy, sortOrder, orderBy) => {
+      prismaMock.permission.findMany.mockResolvedValue(buildPermissions(['user:read']))
+      prismaMock.user.count.mockResolvedValue(1)
+
+      const response = await app.inject({
+         method: 'GET',
+         url: `/users?sortBy=${String(sortBy)}&sortOrder=${String(sortOrder)}`,
+         headers: { authorization: `Bearer ${await createAccessToken()}` },
       })
-      expect(prismaMock.roleAssignment.createMany).toHaveBeenCalledWith({
-         data: [
-            {
-               userId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
-               roleId: USER_ROLE_ID,
-               grantedBy: ADMIN_ID,
-            },
-         ],
+
+      expect(response.statusCode).toBe(200)
+      expect(prismaMock.user.findMany).toHaveBeenCalledWith(expect.objectContaining({ orderBy }))
+   })
+
+   it('ignores whitespace-only search', async () => {
+      prismaMock.permission.findMany.mockResolvedValue(buildPermissions(['user:read']))
+      prismaMock.user.count.mockResolvedValue(2)
+
+      const response = await app.inject({
+         method: 'GET',
+         url: '/users?search=%20%20&pageSize=100',
+         headers: { authorization: `Bearer ${await createAccessToken()}` },
       })
-      expect(createdUserData).toMatchObject({
-         email: 'new.user@example.com',
-         firstName: 'New',
-         lastName: 'User',
-         position: 'Manager',
+
+      expect(response.statusCode).toBe(200)
+      expect(response.json()).toEqual({
+         data: [],
+         meta: { page: 1, pageSize: 100, total: 2, totalPages: 1 },
       })
-      expect(createdUserData?.passwordHash).toEqual(expect.any(String))
-      expect(createdUserData?.passwordHash).not.toBe('ChangeMe123!')
+      expect(prismaMock.user.findMany).toHaveBeenCalledWith(
+         expect.objectContaining({ where: {}, skip: 0, take: 100 }),
+      )
    })
 
    it('returns 403 when user:create permission is missing', async () => {
@@ -338,6 +631,8 @@ describe('Users management', () => {
             firstName: 'Updated',
             lastName: 'User',
             position: 'Director',
+            status: 'active',
+            avatarUrl: null,
             createdAt: new Date('2024-01-01T00:00:00.000Z'),
             roleAssignments: [
                {
@@ -391,6 +686,8 @@ describe('Users management', () => {
             firstName: 'Updated',
             lastName: 'User',
             position: 'Director',
+            status: 'active',
+            avatarUrl: null,
             createdAt: '2024-01-01T00:00:00.000Z',
             roleAssignments: [
                {
@@ -658,6 +955,8 @@ describe('Users management', () => {
             firstName: 'Test',
             lastName: 'User',
             position: 'Manager',
+            status: 'active',
+            avatarUrl: null,
             createdAt: new Date('2024-01-01T00:00:00.000Z'),
             roleAssignments: [
                {
@@ -703,6 +1002,8 @@ describe('Users management', () => {
             firstName: 'Test',
             lastName: 'User',
             position: 'Manager',
+            status: 'active',
+            avatarUrl: null,
             createdAt: '2024-01-01T00:00:00.000Z',
             roleAssignments: [
                {

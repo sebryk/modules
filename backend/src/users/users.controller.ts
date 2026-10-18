@@ -14,10 +14,11 @@ import type { AuthenticatedRequest } from '../common/types/api'
 
 import { RequirePermission } from '../auth/decorators/require-permission.decorator'
 import { CreateUserDto } from './dto/create-user.dto'
+import { FindUsersQueryDto } from './dto/find-users-query.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { ReplaceUserRolesDto } from '../rbac/dto/replace-user-roles.dto'
 import { UsersService } from './users.service'
-import type { User } from './users.types'
+import type { User, UsersList } from './users.types'
 
 @Controller('users')
 export class UsersController {
@@ -25,12 +26,8 @@ export class UsersController {
 
    @Get()
    @RequirePermission('user:read')
-   public async findAll(@Query('include') include?: string): Promise<{ data: User[] }> {
-      const queries = include?.split(',') ?? []
-      const users = await this.usersService.findAll({
-         withRoleAssigments: queries.includes('role-assignment'),
-      })
-      return { data: users }
+   public async findAll(@Query() query: FindUsersQueryDto): Promise<UsersList> {
+      return this.usersService.findAll(query)
    }
 
    @Get(':id')

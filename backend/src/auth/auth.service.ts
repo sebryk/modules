@@ -73,6 +73,8 @@ export class AuthService {
             firstName: true,
             lastName: true,
             position: true,
+            status: true,
+            avatarUrl: true,
             createdAt: true,
          },
       })

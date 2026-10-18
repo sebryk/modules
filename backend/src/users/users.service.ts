@@ -4,6 +4,7 @@ import {
    Injectable,
    NotFoundException,
 } from '@nestjs/common'
+import type { Prisma } from '@prisma/client'
 import * as argon2 from 'argon2'
 
 import { PASSWORD_HASH_OPTIONS } from '../auth/auth.constants'
@@ -13,26 +14,59 @@ import { ReplaceUserRolesDto } from '../rbac/dto/replace-user-roles.dto'
 import { baseRoleSelect } from '../rbac/rbac.select'
 import type { Role } from '../rbac/rbac.types'
 import type { CreateUserDto } from './dto/create-user.dto'
+import { FindUsersQueryDto } from './dto/find-users-query.dto'
 import type { UpdateUserDto } from './dto/update-user.dto'
-import type { User } from './users.types'
+import type { User, UsersList } from './users.types'
 import { roleAssignmentsSelect, userWithRolesSelect } from './users.select'
 
 @Injectable()
 export class UsersService {
    public constructor(private readonly prismaService: PrismaService) {}
 
-   public async findAll({ withRoleAssigments = false } = {}): Promise<User[]> {
-      const users = await this.prismaService.user.findMany({
-         select: {
-            ...userWithRolesSelect,
-            ...(withRoleAssigments && roleAssignmentsSelect),
-         },
-         orderBy: {
-            createdAt: 'desc',
-         },
-      })
+   public async findAll(query = new FindUsersQueryDto()): Promise<UsersList> {
+      const { search, position, status, sortBy, sortOrder, page, pageSize, include } = query
+      const words =
+         search
+            ?.trim()
+            .split(/\s+/)
+            .filter(Boolean)
+            .map((word) => word.replace(/[\\%_]/g, '\\$&')) ?? []
+      const where: Prisma.UserWhereInput = {
+         ...(position !== undefined && { position }),
+         ...(status !== undefined && { status }),
+         ...(words.length > 0 && {
+            AND: words.map((word) => ({
+               OR: [
+                  { firstName: { contains: word, mode: 'insensitive' } },
+                  { lastName: { contains: word, mode: 'insensitive' } },
+                  { email: { contains: word, mode: 'insensitive' } },
+                  { position: { contains: word, mode: 'insensitive' } },
+               ],
+            })),
+         }),
+      }
+      const orderBy: Prisma.UserOrderByWithRelationInput[] =
+         sortBy === 'name'
+            ? [{ firstName: sortOrder }, { lastName: sortOrder }, { id: 'asc' }]
+            : [{ [sortBy]: sortOrder }, { id: 'asc' }]
+      const withRoleAssignments = include?.split(',').includes('role-assignment') ?? false
+      const total = await this.prismaService.user.count({ where })
+      const totalPages = Math.ceil(total / pageSize)
+      // Avoid overflowing Prisma's offset for pages beyond the filtered result set.
+      const data =
+         page > totalPages
+            ? []
+            : await this.prismaService.user.findMany({
+                 where,
+                 select: withRoleAssignments
+                    ? { ...userWithRolesSelect, ...roleAssignmentsSelect }
+                    : userWithRolesSelect,
+                 orderBy,
+                 skip: (page - 1) * pageSize,
+                 take: pageSize,
+              })
 
-      return users
+      return { data, meta: { page, pageSize, total, totalPages } }
    }
 
    public async findById(id: string): Promise<User> {
@@ -101,16 +135,11 @@ export class UsersService {
                   firstName: createUserDto.firstName,
                   lastName: createUserDto.lastName,
                   position: createUserDto.position,
+                  status: createUserDto.status,
+                  avatarUrl: createUserDto.avatarUrl,
                   passwordHash,
                },
-               select: {
-                  id: true,
-                  email: true,
-                  firstName: true,
-                  lastName: true,
-                  position: true,
-                  createdAt: true,
-               },
+               select: userWithRolesSelect,
             })
 
             await tx.roleAssignment.createMany({
@@ -274,6 +303,8 @@ export class UsersService {
                   firstName: updateUserDto.firstName,
                   lastName: updateUserDto.lastName,
                   position: updateUserDto.position,
+                  status: updateUserDto.status,
+                  avatarUrl: updateUserDto.avatarUrl,
                   passwordHash,
                },
                select: {

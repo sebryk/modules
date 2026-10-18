@@ -1,6 +1,7 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common'
 
 import { UsersService } from './users.service'
+import { FindUsersQueryDto } from './dto/find-users-query.dto'
 
 describe('UsersService', () => {
    it('returns nested role assignments in findAll', async () => {
@@ -13,6 +14,8 @@ describe('UsersService', () => {
                   firstName: 'Test',
                   lastName: 'User',
                   position: 'Manager',
+                  status: 'active',
+                  avatarUrl: null,
                   createdAt: new Date('2024-01-01T00:00:00.000Z'),
                   roleAssignments: [
                      {
@@ -28,6 +31,7 @@ describe('UsersService', () => {
                   ],
                },
             ]),
+            count: jest.fn().mockResolvedValue(1),
             findUnique: jest.fn(),
          },
          role: {
@@ -41,28 +45,37 @@ describe('UsersService', () => {
 
       const usersService = new UsersService(prismaService as never)
 
-      await expect(usersService.findAll()).resolves.toEqual([
-         {
-            id: 'user-1',
-            email: 'user@example.com',
-            firstName: 'Test',
-            lastName: 'User',
-            position: 'Manager',
-            createdAt: new Date('2024-01-01T00:00:00.000Z'),
-            roleAssignments: [
-               {
-                  grantedBy: 'admin-1',
-                  createdAt: new Date('2024-01-02T00:00:00.000Z'),
-                  role: {
-                     id: 'role-1',
-                     name: 'manager',
-                     description: 'Can manage users',
-                     isSystem: false,
+      await expect(
+         usersService.findAll(
+            Object.assign(new FindUsersQueryDto(), { include: 'role-assignment' }),
+         ),
+      ).resolves.toEqual({
+         data: [
+            {
+               id: 'user-1',
+               email: 'user@example.com',
+               firstName: 'Test',
+               lastName: 'User',
+               position: 'Manager',
+               status: 'active',
+               avatarUrl: null,
+               createdAt: new Date('2024-01-01T00:00:00.000Z'),
+               roleAssignments: [
+                  {
+                     grantedBy: 'admin-1',
+                     createdAt: new Date('2024-01-02T00:00:00.000Z'),
+                     role: {
+                        id: 'role-1',
+                        name: 'manager',
+                        description: 'Can manage users',
+                        isSystem: false,
+                     },
                   },
-               },
-            ],
-         },
-      ])
+               ],
+            },
+         ],
+         meta: { page: 1, pageSize: 10, total: 1, totalPages: 1 },
+      })
    })
 
    it('throws NotFoundException when user is missing in findById', async () => {
@@ -106,6 +119,8 @@ describe('UsersService', () => {
                   firstName: 'Test',
                   lastName: 'User',
                   position: 'Manager',
+                  status: 'active',
+                  avatarUrl: null,
                   createdAt: new Date('2024-01-01T00:00:00.000Z'),
                   roleAssignments: [
                      {
@@ -152,6 +167,8 @@ describe('UsersService', () => {
          firstName: 'Test',
          lastName: 'User',
          position: 'Manager',
+         status: 'active',
+         avatarUrl: null,
          createdAt: new Date('2024-01-01T00:00:00.000Z'),
          roleAssignments: [
             {
@@ -207,7 +224,11 @@ describe('UsersService', () => {
       ).rejects.toBeInstanceOf(BadRequestException)
    })
 
-   it('updates a user and replaces their roles', async () => {
+   it.each<{ status?: 'vacation'; avatarUrl?: string | null }>([
+      {},
+      { status: 'vacation', avatarUrl: 'https://example.com/avatar.png' },
+      { avatarUrl: null },
+   ])('updates a user and replaces their roles with profile fields %j', async (fields) => {
       const transactionContext = {
          user: {
             update: jest.fn().mockResolvedValue({
@@ -233,6 +254,8 @@ describe('UsersService', () => {
                   firstName: 'Updated',
                   lastName: 'User',
                   position: 'Director',
+                  status: 'active',
+                  avatarUrl: null,
                   createdAt: new Date('2024-01-01T00:00:00.000Z'),
                   roleAssignments: [
                      {
@@ -277,6 +300,7 @@ describe('UsersService', () => {
             lastName: 'User',
             position: 'Director',
             roleIds: ['role-2'],
+            ...fields,
          }),
       ).resolves.toEqual({
          id: 'user-1',
@@ -284,6 +308,8 @@ describe('UsersService', () => {
          firstName: 'Updated',
          lastName: 'User',
          position: 'Director',
+         status: 'active',
+         avatarUrl: null,
          createdAt: new Date('2024-01-01T00:00:00.000Z'),
          roleAssignments: [
             {
@@ -308,6 +334,8 @@ describe('UsersService', () => {
                lastName: string
                position: string
                passwordHash: string
+               status?: string
+               avatarUrl?: string | null
             }
             select: { id: boolean }
          },
@@ -319,6 +347,8 @@ describe('UsersService', () => {
       expect(updateArgs.data.firstName).toBe('Updated')
       expect(updateArgs.data.lastName).toBe('User')
       expect(updateArgs.data.position).toBe('Director')
+      expect(updateArgs.data.status).toBe(fields.status)
+      expect(updateArgs.data.avatarUrl).toBe(fields.avatarUrl)
       expect(typeof updateArgs.data.passwordHash).toBe('string')
       expect(updateArgs.data.passwordHash).not.toBe('UpdatedPass123!')
       expect(updateArgs.select).toEqual({
