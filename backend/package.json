@@ -16,6 +16,7 @@
       "test": "jest --runInBand",
       "prisma:generate": "prisma generate",
       "prisma:migrate:dev": "prisma migrate dev",
+      "prisma:migrate:deploy": "prisma migrate deploy",
       "prisma:seed": "bun prisma/seed.ts"
    },
    "dependencies": {
