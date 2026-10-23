@@ -18,12 +18,6 @@ type EmployeeRecord = {
    status: EmployeeStatus
 }
 
-const employeeStatusLabels: Record<EmployeeStatus, string> = {
-   active: 'Активен',
-   invited: 'Приглашён',
-   vacation: 'В отпуске',
-}
-
 const employees: EmployeeRecord[] = [
    {
       id: '4c719f1a-a3f2-4eb9-8856-1f6f9ca2b0b5',
@@ -216,5 +210,5 @@ const employees: EmployeeRecord[] = [
    },
 ]
 
-export { employees, employeeStatusLabels }
+export { employees }
 export type { EmployeeRecord, EmployeeStatus, EmployeePosition }
