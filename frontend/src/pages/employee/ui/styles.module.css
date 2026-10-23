@@ -2,6 +2,12 @@
    color: var(--mantine-color-dimmed);
 }
 
+.employee-page__breadcrumbs-btn:hover {
+   position: relative;
+   background: none;
+   opacity: 0.6;
+}
+
 .employee-page__muted-icon {
    color: var(--mantine-color-dimmed);
 }

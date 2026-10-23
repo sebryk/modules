@@ -20,12 +20,3 @@
 .team-page__sort-icon {
    color: var(--mantine-color-dimmed);
 }
-
-.team-page__employee-link {
-   font-weight: 500;
-   color: var(--mantine-color-text);
-}
-
-.team-page__employee-link:hover {
-   color: var(--mantine-primary-color-filled);
-}

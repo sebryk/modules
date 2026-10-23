@@ -48,6 +48,7 @@ const logoutSession = async (): Promise<void> => {
       clearSession()
       queryClient.removeQueries({ queryKey: authQueryKeys.bootstrap() })
       queryClient.removeQueries({ queryKey: userQueryKeys.me() })
+      queryClient.removeQueries({ queryKey: userQueryKeys.lists() })
    }
 }
 
